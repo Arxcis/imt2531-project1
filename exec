@@ -11,11 +11,14 @@ build() {
     # @doc https://stackoverflow.com/a/8597411/6292603
     if [[ "$OSTYPE" == "linux-gnu" ]]; then   #if LINUX
         LINKER_FLAGS="-lopengl -lglfw -lglew"
-        echo "Building Linxu($OSTYPE): "
-
+        echo "Building Linux($OSTYPE): "
+        
     elif [[ "$OSTYPE" == "darwin"* ]]; then   #if MacOS
         LINKER_FLAGS="-framework OpenGL -lglfw -lglew"
         echo "Building MacOS($OSTYPE): "
+    else
+        echo "ERROR: OS NOT SUPPORTED"
+        exit 1;
     fi
 
     g++ $INCLUDE_PATHS\
@@ -25,7 +28,6 @@ build() {
         -Wall\
         -o $BUILD_DIR/main\
         $SOURCE_DIR/main.cpp
-
 }
 
 run() {
