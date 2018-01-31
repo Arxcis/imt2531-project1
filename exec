@@ -1,49 +1,52 @@
-#!/bin/bash
+#!/usr/local/bin/python3
+# -*- coding:utf-8 -*-
+import argparse
+import subprocess
+import os
+import platform
+import sys
 
-BUILD_DIR="./build"
-SOURCE_DIR="./src"
+def build(build_dir, source_dir):
+    cmd = []
+    cmd.extend(["g++", "-std=c++14", "-g", "-Wall",
+                "-I/usr/local/include",
+                "-L/usr/local/lib"])
+    
+    _platform = platform.system()
 
-build() {
-    INCLUDE_PATHS="-I/usr/local/include"
-    LIBRARY_PATHS="-L/usr/local/lib"
-    LINKER_FLAGS=
-
-    # @doc https://stackoverflow.com/a/8597411/6292603
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then   #if LINUX
-        LINKER_FLAGS="-lopengl -lglfw -lglew"
-        echo "Building Linux($OSTYPE): "
+    # Linker flags
+    if _platform == "Linux":
+        cmd.extend(["-lopengl", "-lglfw", "-lglew"])
         
-    elif [[ "$OSTYPE" == "darwin"* ]]; then   #if MacOS
-        LINKER_FLAGS="-framework OpenGL -lglfw -lglew"
-        echo "Building MacOS($OSTYPE): "
-    else
-        echo "ERROR: OS NOT SUPPORTED"
-        exit 1;
-    fi
+    elif _platform == "Darwin":
+        cmd.extend(["-framework","OpenGL","-lglfw","-lglew"])
+    else:
+        print(_platform + " not supported")
+        sys.exit()
 
-    g++ $INCLUDE_PATHS\
-        $LINKER_FLAGS\
-        -std=c++14\
-        -g\
-        -Wall\
-        -o $BUILD_DIR/main\
-        $SOURCE_DIR/main.cpp
-}
+    cmd.extend(["-o", build_dir+"/main",
+                 source_dir+"/main.cpp"])
 
-run() {
-    $BUILD_DIR/main $1   
-}
+    subprocess.call(cmd)
 
-key="$1"
-case $key in
-    build)
-        build
-    ;;
-    run)
-        run
-    ;;
-    *)
-        build
-        run
-    ;;
-esac
+
+def run(build_dir):
+    subprocess.call([build_dir+"/main"])
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-b", "--build", help="build only", action="store_true")
+    parser.add_argument("-r", "--run", help="run only", action="store_true")
+    argv = parser.parse_args()
+
+    build_dir = "./build"
+    source_dir = "./src"
+
+    if argv.build:
+        build(build_dir, source_dir)
+    elif argv.run:
+        run(build_dir)
+    else:
+        build(build_dir, source_dir)
+        run(build_dir)

@@ -14,9 +14,9 @@ const int LEVEL_COUNT  = 1;
 const int OPENGL_MAJOR = 4;
 const int OPENGL_MINOR = 1;
 
-const char* WIN_NAME = "Overkill Studio - Assignment1";
-const int WIN_WIDTH = 1024;
-const int WIN_HEIGHT = 768;
+const char WIN_NAME[] = "Overkill Studio - Assignment1";
+const int WIN_WIDTH   = 1024;
+const int WIN_HEIGHT  = 768;
 }
 
 #define PANIC(msg) {\
