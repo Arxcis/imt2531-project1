@@ -1,10 +1,9 @@
 #!/bin/bash
 
-
+BUILD_DIR="./build"
 SOURCE_DIR="./src"
 
 build() {
-    BUILD_DIR="./build"
     INCLUDE_PATHS="-I/usr/local/include"
     LIBRARY_PATHS="-L/usr/local/lib"
     LINKER_FLAGS=
