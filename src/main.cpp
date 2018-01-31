@@ -1,15 +1,18 @@
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <assert.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 
-    // How many arguments do we support?
+    // PROCESS ARGUMENTS
     const int SUPPORTED_NUMBER_OF_ARGUMENTS = 2;
-    if (argc > SUPPORTED_NUMBER_OF_ARGUMENTS) 
-        return 0;
-
+    assert(argc <= SUPPORTED_NUMBER_OF_ARGUMENTS);
+    printf("Argv 1: %s\n", argv[1]);
 
     // INIT OPENGL 
 
-    // INIT WINDOW
+    // INIT WINDOW1
 
     // LOAD ASSETS (map, spritesheet)
 
@@ -29,6 +32,6 @@ int main(int argc, char** argv) {
 
 
     // CLEANUP
-    
+
     return 0;
 }
