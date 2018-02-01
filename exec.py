@@ -7,7 +7,7 @@ import os
 import platform
 import sys
 
-def create_build_directory_if_not_exist(build_dir):
+def ensure_build_directory_exist(build_dir):
 
     if not os.path.isdir(build_dir):
         print("-- Creating build directory @ "+ build_dir)
@@ -24,7 +24,7 @@ def build(build_dir, source_dir):
     
     _platform = platform.system()
 
-    print("-- Trying to build for " + _platform);
+    print("-- Building for " + _platform);
 
     #
     # LINUX
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     build_dir = "./build"
     source_dir = "./src"
 
-    create_build_directory_if_not_exist(build_dir)
+    ensure_build_directory_exist(build_dir)
 
     if argv.build:
         build(build_dir, source_dir)
