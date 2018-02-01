@@ -1,10 +1,3 @@
-# Assignment Repository Skeleton
-
-Please modify the Readme file to your project specifics, including project name, involved group members (including mail contacts), as well as a version history.
-
-In addition, use this file to describe the project functionality, provide setup instructions, and a brief overview on how to use it.
-
-
 # Setup development environment - macOS and Ubuntu
 
 ### How to Install libraries inside here
@@ -31,12 +24,18 @@ In addition, use this file to describe the project functionality, provide setup 
 
 ### How to run build-scripts
 
-Make sure you have `python3`.
-
-**Python3**
+Make sure you have `python3` correctly installed
 ```
 $ /usr/local/bin/python3 --version
 Python 3.6.4
 ```
 To run `./exec.py`
+```
+$ ./exec.py --help
+usage: exec.py [-h] [-b] [-r]
 
+optional arguments:
+  -h, --help   show this help message and exit
+  -b, --build  build only
+  -r, --run    run only
+```
