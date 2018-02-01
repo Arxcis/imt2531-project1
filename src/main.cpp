@@ -89,12 +89,12 @@ int main(int argc, char* argv[]) {
     // GENERATE GPU BUFFERS
     GLuint vao;
     glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
     GLuint vbo[2];
     glGenBuffers(2, vbo);
 
     // BUFFER DATA TO GPU
+    glBindVertexArray(vao);
+
     const GLfloat vertixPosition[6] = {-0.5,-0.5,   0.5, -0.5,   0.0, 0.5};
     glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertixPosition), vertixPosition, GL_STATIC_DRAW);
