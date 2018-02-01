@@ -13,7 +13,18 @@
 #include "glm/glm/gtc/matrix_transform.hpp"
 #include "glm/glm/gtc/type_ptr.hpp"
 
+struct Color {
+    float r, g, b, a;
+};
+
 namespace ost {
+namespace color {
+const Color BACKGROUND = {.3f, .9f, .3f, 1.0f};
+const Color FLOOR  = {.3f, .9f, .3f, 1.0f};
+const Color SCORE  = {.3f, .9f, .3f, 1.0f};
+const Color CHEESE = {.3f, .9f, .3f, 1.0f};
+}
+
 const int LEVEL_COUNT  = 1;
 const int OPENGL_MAJOR = 4;
 const int OPENGL_MINOR = 1;
@@ -84,6 +95,9 @@ int main(int argc, char* argv[]) {
     // BUILD ASSET-STRUCTS
 
     // BUILD SHADER PROGRAMS
+    
+    // @TODO - add sprite shader and floor-shader. 
+
     const GLuint shaderProgram    = buildShaderProgram("./src/vertex.glsl", "./src/fragment.glsl");
     const GLint positionAttribute = glGetAttribLocation(shaderProgram, "position");
     const GLint colorAttribute    = glGetAttribLocation(shaderProgram, "color");
@@ -97,24 +111,27 @@ int main(int argc, char* argv[]) {
     // BUFFER DATA TO GPU
     glBindVertexArray(vao);
 
-    const GLfloat vertixPosition[6] = {-0.5,-0.5,   0.5, -0.5,   0.0, 0.5};
+    const GLfloat vertexPosition[6] = {-0.5,-0.5,   0.5, -0.5,   0.0, 0.5};
     glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertixPosition), vertixPosition, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPosition), vertexPosition, GL_STATIC_DRAW);
     glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(positionAttribute);
 
-    const GLfloat vertixColor[9] = {0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0};
+    const GLfloat vertexColor[9] = {0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0};
     glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertixColor), vertixColor, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColor), vertexColor, GL_STATIC_DRAW);
     glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(colorAttribute);
 
-    // GENERATE MATRICES
 
+    // GENERATE MATRICES
 
     // GAMELOOP
     bool running = true;
-    glClearColor(1,1,1,0);
+    glClearColor(ost::color::BACKGROUND.r,
+                 ost::color::BACKGROUND.g,
+                 ost::color::BACKGROUND.b,
+                 ost::color::BACKGROUND.a);
 
     while (running) {
 
@@ -122,8 +139,8 @@ int main(int argc, char* argv[]) {
         glfwPollEvents();
         running = (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
                    glfwWindowShouldClose(window) == 0);    
-        
-        // UPDATE 
+
+        update();
 
         // RENDER
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -137,7 +154,25 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+void update(const GLFWwindow* window) {
+    // UPDATE 
+    // 1. MOVE PACMAN -  W, A, S, D
+    {
 
+    }
+    // 2. MOVE GHOSTS
+    {
+
+    }
+    // 3. INCREMENT HIGH SCORE
+    {
+
+    }
+    // 4. DELETE CHEESE -  
+    {
+
+    }
+}
 
 // 
 // COPY PASTE FROM LAB03 (with minor modification)

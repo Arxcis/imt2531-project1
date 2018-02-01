@@ -8,15 +8,23 @@ import platform
 import sys
 
 
+def build():
+    cmd = ["make"]
+    subprocess.call(cmd)
+
 def run(build_dir):
     cmd = [build_dir + "/main"]
     print("-- RUNNING GAME")
     subprocess.call(cmd)
 
 
+def compile_spritesheet(x,y,w,h,c,r):
+    return
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--run", help="run only", action="store_true")
+    parser.add_argument("-cs", "--compile-sprites", help="run only", action="store_true")
     argv = parser.parse_args()
 
     build_dir = "./bin"
@@ -25,4 +33,5 @@ if __name__ == "__main__":
     if argv.run:
         run(build_dir)
     else:
+        build()
         run(build_dir)
