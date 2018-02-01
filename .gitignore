@@ -1,2 +1,16 @@
 build/
 .DS_Store
+lib/
+
+# Binaries
+dll/
+glew/
+glfw/
+glm/
+bin/
+
+# cmake
+Makefile
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
