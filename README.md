@@ -31,9 +31,7 @@ In addition, use this file to describe the project functionality, provide setup 
 
 ### How to run build-scripts
 
-Make sure you have `python3`.
-
-**Python3**
+Make sure you have `python3` correctly installed
 ```
 $ /usr/local/bin/python3 --version
 Python 3.6.4
