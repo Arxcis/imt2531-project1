@@ -37,4 +37,12 @@ $ /usr/local/bin/python3 --version
 Python 3.6.4
 ```
 To run `./exec.py`
+```
+$ ./exec.py --help
+usage: exec.py [-h] [-b] [-r]
 
+optional arguments:
+  -h, --help   show this help message and exit
+  -b, --build  build only
+  -r, --run    run only
+```
