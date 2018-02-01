@@ -18,36 +18,43 @@ def ensure_build_directory_exist(build_dir):
 def build(build_dir, source_dir):
 
     cmd = []
-    cmd.extend(["g++", "-std=c++14", "-g", "-Wall",
-                "-I/usr/local/include",
-                "-L/usr/local/lib"])
-    
-    _platform = platform.system()
 
-    print("-- Building for " + _platform);
+    COMPILER      = ["g++"]
+    CPP_VERSION   = ["-std=c++14"]
+    DEBUG_FLAGS   = ["-g"]
+    WARNING_FLAGS = ["-Wall"]
+    INCLUDE_DIRS  = ["-I/usr/local/include"]
+    LIBRARY_DIR   = ["-L/usr/local/lib"]
 
-    #
+    UBUNTU_LINKER_FLAGS=["-lopengl", "-lglfw", "-lglew"]
+    MACOS_LINKER_FLAGS=["-framework","OpenGL","-lglfw","-lglew"]
+
+    OUTPUT_FILE  = ["-o", build_dir + "/main"]
+    SOURCE_FILES = [source_dir + "/main.cpp"]
+
+    cmd.extend(COMPILER)
+    cmd.extend(CPP_VERSION)
+    cmd.extend(DEBUG_FLAGS)
+    cmd.extend(WARNING_FLAGS)
+    cmd.extend(INCLUDE_DIRS)
+    cmd.extend(LIBRARY_DIR)
+
+    print("-- Building for " + platform.system());
     # LINUX
-    #
-    if _platform == "Linux":
-        cmd.extend(["-lopengl", "-lglfw3", "-lglew"])
+    if platform.system() == "Linux":
+        cmd.extend(UBUNTU_LINKER_FLAGS)
 
-    #
     # MACOS
-    #
-    elif _platform == "Darwin":
-        cmd.extend(["-framework","OpenGL","-lglfw","-lglew"])
+    elif platform.system() == "Darwin":
+        cmd.extend(MACOS_LINKER_FLAGS)
     
-    #
     # WINDOWS AND FRIENDS
-    #
     else:
-        print("-- "+ _platform + " not supported")
+        print("-- "+ platform.system() + " not supported")
         sys.exit()
 
-
-    cmd.extend(["-o", build_dir+"/main",
-                 source_dir+"/main.cpp"])
+    cmd.extend(OUTPUT_FILE)
+    cmd.extend(SOURCE_FILES)
 
     print("-- BUILD STARTING")
     subprocess.call(cmd)
