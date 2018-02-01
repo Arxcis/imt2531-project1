@@ -17,11 +17,17 @@ def run(build_dir):
     print("-- RUNNING GAME")
     subprocess.call(cmd)
 
-
-def compile_spritesheet(x,y,w,h,c,r):
+def compile_spritesheet(x,y,w,h,c,r, source, target):
     return
 
+
 if __name__ == "__main__":
+    """
+    compile_spritesheet(134, 234, 234, 234, 234,234, "pacman.png", "pacman.ost")
+    compile_spritesheet(134, 234, 234, 234, 234,234, "pacman.png", "pacman.ost")
+    compile_spritesheet(134, 234, 234, 234, 234,234, "pacman.png", "numbers.ost")
+    """
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--run", help="run only", action="store_true")
     parser.add_argument("-cs", "--compile-sprites", help="run only", action="store_true")
