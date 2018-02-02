@@ -43,6 +43,7 @@ const int WIN_HEIGHT  = 768;
 
 GLuint buildShaderProgram(const char* path_vert_shader, const char* path_frag_shader);
 GLuint loadAndCompileShader(const char* fname, GLenum shaderType);
+void update(const GLFWwindow*);
 
 int main(int argc, char* argv[]) {
 
@@ -140,7 +141,7 @@ int main(int argc, char* argv[]) {
         running = (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
                    glfwWindowShouldClose(window) == 0);    
 
-        update();
+        update(window);
 
         // RENDER
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
