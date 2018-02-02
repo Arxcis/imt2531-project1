@@ -1,4 +1,4 @@
-# Setup development environment - macOS and Ubuntu
+## 1. Setup development environment - macOS and Ubuntu
 
 ### How to Install libraries inside here
 
@@ -24,6 +24,7 @@ optional arguments:
 ```
 
 
-### References
+
+## 2. References
 
 VBO's and VAO's  - http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 02.02.2017
