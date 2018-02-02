@@ -1,6 +1,7 @@
 
 #CMAKE FOR GLFW GLEW 
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.1)
+
 if(SRC)
   get_filename_component(projectname ${SRC} NAME_WE)
 else()
@@ -82,6 +83,8 @@ endif(WINDOWS)
 if(APPLE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${GLEW_INCLUDE_DIRS}")
 endif(APPLE)
+
+set (CMAKE_CXX_STANDARD 14)
 
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
