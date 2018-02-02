@@ -8,6 +8,7 @@ glew/
 glfw/
 glm/
 bin/
+*.o
 
 # cmake
 Makefile

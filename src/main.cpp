@@ -6,12 +6,13 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
-#include "glm/glm/glm.hpp"
-#include "glm/glm/gtc/matrix_transform.hpp"
-#include "glm/glm/gtc/type_ptr.hpp"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "./loadShader.hpp"
 #include "./loadTexture.hpp"
@@ -84,34 +85,73 @@ int main(int argc, char* argv[]) {
     }
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     glfwSwapInterval(1);
-    
+
     // INITIALIZE G L E W
     glewExperimental = GL_TRUE;  // MACOS/intel cpu support
     if (glewInit() != GLEW_OK) {
         glfwTerminate();
         PANIC("Failed to initialize GLEW");
     }
-    
-    // LOAD ASSETS (map, spritesheet)
+
+
+        // LOAD ASSETS (map, spritesheet)
+
+        //READ MAP
+        std::vector<glm::vec2> buffer;
+        {
+            const char* fname = "./levels/level0";
+            std::ifstream in;
+            in.open(fname, std::ios::binary);
+
+            if (in.fail()) {
+                std::cerr << "Unable to open " << fname << " I'm out!" << std::endl;
+                exit(-1);
+            }
+
+            // READ LEVEL SIZES
+            std::string sizeDefs;
+            std::getline(in, sizeDefs);
+            std::size_t delimIndex =  sizeDefs.find("x");
+            std::size_t levelWidth = std::stoi(sizeDefs.substr(0, delimIndex));
+            std::size_t levelHeight = std::stoi(sizeDefs.substr(delimIndex+1, sizeDefs.size()-delimIndex+1));
+
+
+            std::string line;
+            for(std::size_t y=0; y < levelHeight ;y++) {
+                if (in.eof() || in.bad()) {
+                    PANIC("Y out of range in level read");
+                }
+                std::getline(in, line);
+                std::stringstream ss(line);
+
+                for(std::size_t x=0;x < levelWidth;x++) {
+                    int n;
+                    if(!(ss >> n)) {PANIC("X out of range in level read");} //failed to read, must be end of line
+                    if(n % 2 == 0) { buffer.push_back(glm::vec2(x, levelHeight-y)); } //FILL THE BUFFER WITH Vectors - vertex candidate
+                }
+            }
+        }
+
+        for(const auto& v : buffer) {
+            printf("%.1f, %.1f\n", v.x, v.y);
+        }
 
     // BUILD ASSET-STRUCTS
 
     // BUILD SHADER PROGRAMS
-    
-    // @TODO - add sprite shader and floor-shader. 
-
     const GLuint pacmanShader = ost::loadTexture("./assets/pacman.bmp");
     if (pacmanShader == 0) {
         PANIC("Did not load pacman shader");
     }
 
-    const GLuint shaderProgram = ost::loadShaderProgram("./src/vertex.glsl", "./src/fragment.glsl");
+    const GLuint shaderProgram = ost::loadShaderProgram("./shaders/vertex.vert", "./shaders/fragment.frag");
     if (shaderProgram == 0) {
         PANIC("Did not load shader program");
     }
 
     const GLint  positionAttribute = glGetAttribLocation(shaderProgram, "position");
     const GLint  colorAttribute    = glGetAttribLocation(shaderProgram, "color");
+
 
     // GENERATE GPU BUFFERS
     GLuint vao;
@@ -149,7 +189,7 @@ int main(int argc, char* argv[]) {
         // INPUT
         glfwPollEvents();
         running = (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-                   glfwWindowShouldClose(window) == 0);    
+                   glfwWindowShouldClose(window) == 0);
 
         update(window);
 
@@ -166,7 +206,7 @@ int main(int argc, char* argv[]) {
 }
 
 void update(const GLFWwindow* window) {
-    // UPDATE 
+    // UPDATE
     // 1. MOVE PACMAN -  W, A, S, D
     {
 
@@ -179,7 +219,7 @@ void update(const GLFWwindow* window) {
     {
 
     }
-    // 4. DELETE CHEESE -  
+    // 4. DELETE CHEESE -
     {
 
     }
