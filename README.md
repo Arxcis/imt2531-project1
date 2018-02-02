@@ -22,3 +22,8 @@ optional arguments:
   -h, --help  show this help message and exit
   -r, --run   run only
 ```
+
+
+### References
+
+VBO's and VAO's  - http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 02.02.2017
