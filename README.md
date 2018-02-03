@@ -27,5 +27,5 @@ optional arguments:
 
 ## 2. References
 
-Texture sampler GLSL - https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Binding_textures_to_samplers - 03.02.17
+Texture sampler GLSL - https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Binding_textures_to_samplers - 03.02.17 <br>
 VBO's and VAO's  - http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 02.02.17
