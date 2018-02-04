@@ -1,10 +1,10 @@
 ## 1. Setup development environment - macOS and Ubuntu
 
-### How to Install libraries inside here
+### How to Install required libraries  
 
 1. Go to [LAB03](http://prod3.imt.hig.no/imt2531/imt2531_lectures/tree/master/lab03).
 2. Copy the `GLFW/`, `GLEW/`, and `GLM/` to the root directory of project.
-
+3. Download `stb_image.h` form [here](https://github.com/nothings/stb/blob/master/stb_image.h) and place it in `stb/stb_image.h`.
 
 ### How to run python tool
 
