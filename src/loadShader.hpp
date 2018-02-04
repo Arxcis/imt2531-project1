@@ -1,10 +1,10 @@
 #pragma once
 #include <iostream>
-
+#include <vector>
 #include "GL/glew.h"
 
 namespace ost {
-// 
+//
 // COPY PASTE FROM LAB03 (with minor modification)
 //
 GLuint loadAndCompileShader(const char* fname, GLenum shaderType) {
@@ -13,7 +13,7 @@ GLuint loadAndCompileShader(const char* fname, GLenum shaderType) {
     {
         std::ifstream in;
         in.open(fname, std::ios::binary);
-        
+
         if (in.fail()) {
             std::cerr << "Unable to open " << fname << " I'm out!" << std::endl;
             //std::cerr << "Unable to open " << fname << " I'm out!" << std::endl;
@@ -68,7 +68,7 @@ GLuint loadShaderProgram(const char* path_vert_shader, const char* path_frag_sha
     }
 
     GLuint fragmentShader = loadAndCompileShader(path_frag_shader, GL_FRAGMENT_SHADER);
-    if (fragmentShader == 0) { 
+    if (fragmentShader == 0) {
         std::cerr << "Missing fragmentshader\n"; return 0;
     }
 
@@ -84,14 +84,56 @@ GLuint loadShaderProgram(const char* path_vert_shader, const char* path_frag_sha
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    // Link the different shaders that are bound to this program, this creates a final shader that 
+    // Link the different shaders that are bound to this program, this creates a final shader that
     // we can use to render geometry with.
     glLinkProgram(shaderProgram);
     glUseProgram(shaderProgram);
 
     return shaderProgram;
 }
-// 
+//
 // END OF COPY PASTE FROM LAB03
 //
+
+GLuint loadShaderProgram(const char* path_vert_shader, const char* path_geo_shader , const char* path_frag_shader) {
+    // Load and compile the vertex and fragment shaders
+    GLuint vertexShader = loadAndCompileShader(path_vert_shader, GL_VERTEX_SHADER);
+
+    if (vertexShader == 0) {
+        std::cerr << "Missing vertexshader\n"; return 0;
+    }
+
+    GLuint geometryShader = loadAndCompileShader(path_geo_shader, GL_GEOMETRY_SHADER);
+
+    if (geometryShader == 0) {
+        std::cerr << "Missing geometryshader\n"; return 0;
+    }
+
+    GLuint fragmentShader = loadAndCompileShader(path_frag_shader, GL_FRAGMENT_SHADER);
+    if (fragmentShader == 0) {
+        std::cerr << "Missing fragmentshader\n"; return 0;
+    }
+
+
+    // Create a program object and attach the two shaders we have compiled, the program object contains
+    // both vertex and fragment shaders as well as information about uniforms and attributes common to both.
+    GLuint shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, geometryShader);
+    glAttachShader(shaderProgram, fragmentShader);
+
+    // Now that the fragment and vertex shader has been attached, we no longer need these two separate objects and should delete them.
+    // The attachment to the shader program will keep them alive, as long as we keep the shaderProgram.
+    glDeleteShader(vertexShader);
+    glDeleteShader(geometryShader);
+    glDeleteShader(fragmentShader);
+
+    // Link the different shaders that are bound to this program, this creates a final shader that
+    // we can use to render geometry with.
+    glLinkProgram(shaderProgram);
+    glUseProgram(shaderProgram);
+
+    return shaderProgram;
+}
+
 }
