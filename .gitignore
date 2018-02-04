@@ -9,6 +9,7 @@ glfw/
 glm/
 bin/
 *.o
+*.gch
 
 # cmake
 Makefile
