@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <iostream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h" // grab from here --> https://github.com/nothings/stb/blob/master/stb_image.h
+
+
 #include "GL/glew.h"
 
 namespace ost {
@@ -13,76 +17,37 @@ namespace ost {
 // @return GLuint > 0 if successs
 // @error return 0 if error
 //
-GLuint loadTexture(const char* imagepath) {
+GLuint loadTexture(const char* filepath) {
+    int width, height, channelCount;
+    stbi_set_flip_vertically_on_load(true);
 
-    // @ASSUMPTION - Since I only know that this game has just 1 texture.
-    // I can just return the textureID, if this function is called twice.
-    static GLuint textureID = 0;
-    
-    if (textureID > 0) 
-        return textureID;
-    // @ASSUMPTION
+    unsigned char *data = stbi_load(filepath, &width, &height, &channelCount, 0);
 
+    if (!data)
+        return 0;
 
-    // Actual RGB data
-    unsigned char* data;
-    unsigned int   width;
-    unsigned int   height;
-    { 
-        // Data read from the header of the BMP file
-        unsigned char header[54]; // Each BMP file begins by a 54-bytes header
-        unsigned int  dataPos;     // Position in the file where the actual data begins
-
-        unsigned int  imageSize;   // = width*height*3
-
-        // Open the file
-        FILE * file = fopen(imagepath,"rb");
-        if (!file) {
-            std::cerr << "Image file not found\n";
-            return 0;
-        }
-
-        if (fread(header, 1, 54, file) != 54){ // If not 54 bytes read : problem
-            std::cerr << "Not a correct BMP file\n";
-            return 0;
-        }
-
-        if ( header[0]!='B' || header[1]!='M' ) {
-            std::cerr << "Not a correct BMP file\n";
-            return 0;
-        }
-
-        // Read ints from the byte array
-        dataPos    = *(int*)&(header[0x0A]);
-        imageSize  = *(int*)&(header[0x22]);
-        width      = *(int*)&(header[0x12]);
-        height     = *(int*)&(header[0x16]);
-
-        // Some BMP files are misformatted, guess missing information
-        if (imageSize==0)    imageSize = width * height * 3; // 3 : one byte for each Red, Green and Blue component
-        if (dataPos==0)      dataPos = 54; // The BMP header is done that way
-
-        // Create a buffer
-        data = new unsigned char[imageSize];
-
-        // Read the actual data from the file into the buffer
-        fread(data, 1, imageSize, file);
-
-        //Everything is in memory now, the file can be closed
-        fclose(file);
-    }
-
+    GLuint textureID;
     glGenTextures(1, &textureID);
-    
-    // "Bind" the newly created texture : all future texture functions will modify this texture
+
     glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-    // Give the image to OpenGL
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 
-                                 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
+    glTexImage2D(GL_TEXTURE_2D,    // Texture target is the bound texture on previous line
+                 0,                // mipmap level
+                 GL_RGBA,           // openGL internal format
+                 width,            // texture width
+                 height,           // texture height
+                 0,                // should always be 0
+                 GL_RGBA,           // source image format
+                 GL_UNSIGNED_BYTE, // source image data type
+                 data);            // source image buffer
+    
+  //  glGenerateMipmap(GL_TEXTURE_2D);
+    
+    stbi_image_free(data);
     return textureID;
 }
 
