@@ -27,6 +27,7 @@ optional arguments:
 
 ## 2. References
 
+glBufferSubData - https://www.khronos.org/opengl/wiki/Buffer_Object#Data_Specification - 04.02.18 <br>
 Texture/texture-blending tutorial - https://learnopengl.com/Getting-started/Textures 04.02.18 <br>
 Texturing a cube - http://www.opengl-tutorial.org/beginners-tutorials/tutorial-5-a-textured-cube/ - 04.02.18 <br>
 Texture kittens OpenGL tutorial - https://open.gl/textures - 04.02.18 <br>
