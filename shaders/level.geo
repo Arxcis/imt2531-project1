@@ -3,7 +3,7 @@
 layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 
-uniform float quadSize = 0.075; //set this uniform based on screenspace->worldspace
+uniform float quadSize = 0.055; //set this uniform based on screenspace->worldspace
 
 /*
     0 is origin from vertexshader
@@ -12,6 +12,16 @@ uniform float quadSize = 0.075; //set this uniform based on screenspace->worldsp
     |  \    |
     |    \  |
     0-------1
+
+
+    If needed, look into using this structure:
+
+    2-------3
+    | \     |
+    |   O   |
+    |     \ |
+    0-------1
+    
 */
 
 void main()
