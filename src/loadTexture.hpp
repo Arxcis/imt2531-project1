@@ -5,8 +5,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h" // grab from here --> https://github.com/nothings/stb/blob/master/stb_image.h
-
-
 #include "GL/glew.h"
 
 namespace ost {
@@ -19,8 +17,7 @@ namespace ost {
 //
 GLuint loadTexture(const char* filepath) {
     int width, height, channelCount;
-    stbi_set_flip_vertically_on_load(true);
-
+    //stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(filepath, &width, &height, &channelCount, 0);
 
     if (!data)
@@ -50,5 +47,4 @@ GLuint loadTexture(const char* filepath) {
     stbi_image_free(data);
     return textureID;
 }
-
 }
