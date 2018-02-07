@@ -17,6 +17,8 @@
 #include "./loadShader.hpp"
 #include "./loadTexture.hpp"
 
+
+//DISCUSSION: using Color = float[4]; instead?
 struct Color {
     float r,g,b,a;
 };
@@ -24,7 +26,7 @@ struct Color {
 namespace ost {
 namespace color {
 const Color BACKGROUND = {.3f, .9f, .3f, 1.0f};
-const Color FLOOR  = {.3f, .9f, .3f, 1.0f};
+const Color FLOOR  = {1.0f, .1f, .8f, 1.0f};
 const Color SCORE  = {.3f, .9f, .3f, 1.0f};
 const Color CHEESE = {.3f, .9f, .3f, 1.0f};
 }
@@ -35,7 +37,7 @@ const int OPENGL_MINOR = 1;
 
 const char WIN_NAME[] = "Overkill Studio - Assignment1";
 const int WIN_WIDTH   = 1024;
-const int WIN_HEIGHT  = 768;
+const int WIN_HEIGHT  = 1024;
 }
 
 #define PANIC(msg) {\
@@ -117,40 +119,48 @@ int main(int argc, char* argv[]) {
 
 
             std::string line;
-            for(std::size_t y=0; y < levelHeight ;y++) {
+            for(float y=0; y < levelHeight ;y++) {
                 if (in.eof() || in.bad()) {
                     PANIC("Y out of range in level read");
                 }
                 std::getline(in, line);
                 std::stringstream ss(line);
 
-                for(std::size_t x=0;x < levelWidth;x++) {
+                for(float x=0;x < levelWidth;x++) {
                     int n;
                     if(!(ss >> n)) {PANIC("X out of range in level read");} //failed to read, must be end of line
-                    if(n % 2 == 0) { buffer.push_back(glm::vec2(x, levelHeight-y)); } //FILL THE BUFFER WITH Vectors - vertex candidate
+                    if(n % 2 == 0) { buffer.push_back(glm::vec2((x/levelWidth)-.5f, ((levelHeight-y)/levelHeight)-.5f) * 2.0f); } //FILL THE BUFFER WITH Vectors - vertex candidate
                 }
             }
-        }
-
-        for(const auto& v : buffer) {
-            printf("%.1f, %.1f\n", v.x, v.y);
         }
 
     // BUILD ASSET-STRUCTS
 
     // BUILD SHADER PROGRAMS
-    const GLuint pacmanShader = ost::loadTexture("./assets/pacman.bmp");
+    const GLuint pacmanShader = ost::loadTexture("./textures/pacman.png");
     if (pacmanShader == 0) {
         PANIC("Did not load pacman shader");
     }
 
-    const GLuint shaderProgram = ost::loadShaderProgram("./shaders/vertex.vert", "./shaders/fragment.frag");
-    if (shaderProgram == 0) {
-        PANIC("Did not load shader program");
-    }
+        //LEVEL
+    const GLuint levelShader = ost::loadShaderProgram("./shaders/level.vert", "./shaders/level.geo","./shaders/level.frag");
 
-    const GLint  positionAttribute = glGetAttribLocation(shaderProgram, "position");
-    const GLint  colorAttribute    = glGetAttribLocation(shaderProgram, "color");
+
+    // GLint quadSize = glGetUniformLocation(levelShader, "quadSize");
+    //
+    // glUniform1f(quadSize, 2f/levelWidth);
+
+    GLint levelColor = glGetUniformLocation(levelShader, "floor_color");
+
+    float floorColor[] = {ost::color::FLOOR.r,
+                          ost::color::FLOOR.g,
+                          ost::color::FLOOR.b,
+                          ost::color::FLOOR.a};
+
+    glUniform4fv(levelColor, 1, floorColor);
+
+    const GLint  positionAttribute = glGetAttribLocation(levelShader, "position");
+    const GLint  colorAttribute    = glGetAttribLocation(levelShader, "color");
 
 
     // GENERATE GPU BUFFERS
@@ -162,17 +172,21 @@ int main(int argc, char* argv[]) {
     // BUFFER DATA TO GPU
     glBindVertexArray(vao);
 
-    const GLfloat vertexPosition[6] = {-0.5,-0.5,   0.5, -0.5,   0.0, 0.5};
+    // const GLfloat vertexPosition[6] = {-0.5,-0.5,   0.5, -0.5,   0.0, 0.5};
     glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPosition), vertexPosition, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, buffer.size()*sizeof(glm::vec2), buffer.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(positionAttribute);
 
-    const GLfloat vertexColor[9] = {0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0};
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexColor), vertexColor, GL_STATIC_DRAW);
-    glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(colorAttribute);
+
+    ///NEXT SHADER -
+
+    //
+    // const GLfloat vertexColor[9] = {0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0};
+    // glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    // glBufferData(GL_ARRAY_BUFFER, colors.size()*sizeof(Color), colors.data(), GL_STATIC_DRAW);
+    // glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    // glEnableVertexAttribArray(colorAttribute);
 
 
     // GENERATE MATRICES
@@ -195,7 +209,7 @@ int main(int argc, char* argv[]) {
 
         // RENDER
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawArrays(GL_POINTS, 0, buffer.size());
         glfwSwapBuffers(window);
     }
 
