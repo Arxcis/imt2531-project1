@@ -18,7 +18,7 @@
 #include "./loadShader.hpp"
 #include "./loadLevel.hpp"
 #include "./loadTexture.hpp"
-#include "./Pacman.hpp"
+#include "./Entity.hpp"
 #include "./spritesheet.hpp"
 
 
@@ -94,28 +94,38 @@ int main(int argc, char* argv[]) {
         glfwTerminate();
         PANIC("Failed to initialize GLEW");
     }
-    
-    // LOAD ASSETS (map, spritesheet)
-    //READ MAP
-    std::vector<glm::vec2> buffer = ost::loadLevel("./levels/level0");
 
-    // BUILD ASSET-STRUCTS
-
-    // BUILD SHADER PROGRAMS
-    const GLuint pacmanShader = ost::loadTexture("./textures/pacman.png");
-    if (pacmanShader == 0) {
-        PANIC("Did not load pacman shader");
-    }
-
-        //LEVEL
-    const GLuint levelShader = ost::loadShaderProgram("./shaders/level.vert", "./shaders/level.geo","./shaders/level.frag");
-
-
-    // GLint quadSize = glGetUniformLocation(levelShader, "quadSize");
+    enum BufferNames {
+        BUFFER_LEVEL,
+        BUFFER_SPRITE
+    };
     //
+    // GENERATE GPU BUFFERS
+    //
+    GLuint vao[2];
+    glGenVertexArrays(1, vao);
+    
+    GLuint vbo[2];
+    glGenBuffers(2, vbo);
+
+    //
+    // LOAD ASSETS (map, spritesheet)
+    //
+    const std::vector<glm::vec2> buffer = ost::loadLevel("./levels/level0");
+    const GLuint pacmanTexture = ost::loadTexture("./textures/pacman.png");
+    const GLuint levelShader = ost::loadShaderProgram("./shaders/level.vert", "./shaders/level.geo","./shaders/level.frag");
+    const GLuint spriteShader = ost::loadShaderProgram("./shaders/sprite.vert", "./shaders/sprite.frag");
+
+    // @todo - 08.02.17
+    // GLint quadSize = glGetUniformLocation(levelShader, "quadSize");
     // glUniform1f(quadSize, 2f/levelWidth);
 
-    GLint levelColor = glGetUniformLocation(levelShader, "floor_color");
+
+    //
+    // LEVEL SHADER SETUP
+    //
+    glBindVertexArray(vao[BUFFER_LEVEL]);
+    const GLint levelColor = glGetUniformLocation(levelShader, "floor_color");
 
     float floorColor[] = {ost::color::FLOOR.r,
                           ost::color::FLOOR.g,
@@ -127,36 +137,50 @@ int main(int argc, char* argv[]) {
     const GLint  positionAttribute = glGetAttribLocation(levelShader, "position");
     const GLint  colorAttribute    = glGetAttribLocation(levelShader, "color");
 
-
-    // GENERATE GPU BUFFERS
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    GLuint vbo[2];
-    glGenBuffers(2, vbo);
-
-    // BUFFER DATA TO GPU
-    glBindVertexArray(vao);
-
-    // const GLfloat vertexPosition[6] = {-0.5,-0.5,   0.5, -0.5,   0.0, 0.5};
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUFFER_LEVEL]);
     glBufferData(GL_ARRAY_BUFFER, buffer.size()*sizeof(glm::vec2), buffer.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(positionAttribute);
 
+    glBindVertexArray(0);
 
-    ///NEXT SHADER -
 
     //
-    // const GLfloat vertexColor[9] = {0.0,0.0,0.0,  0.0,0.0,0.0,  0.0,0.0,0.0};
-    // glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-    // glBufferData(GL_ARRAY_BUFFER, colors.size()*sizeof(Color), colors.data(), GL_STATIC_DRAW);
-    // glVertexAttribPointer(colorAttribute, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    // glEnableVertexAttribArray(colorAttribute);
+    // SPRITE SHADER SETUP
+    //
+    glBindVertexArray(vao[BUFFER_SPRITE]);    
+    ost::Pacman             pacman{};
+    //@todo std::vector<ost::Ghost> ghost{};
 
+    const GLint  pacmanPosition = glGetAttribLocation(spriteShader, "position");
+    const GLint  pacmanTexcoord = glGetAttribLocation(spriteShader, "texcoord");
+   
+    const auto _buffer = pacman.getBuffer();
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUFFER_SPRITE]);
+    glBufferData(GL_ARRAY_BUFFER, _buffer.size()*sizeof(float), _buffer.data(), GL_STATIC_DRAW);
 
-    // GENERATE MATRICES
+    glVertexAttribPointer(pacmanPosition, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
+    glVertexAttribPointer(pacmanTexcoord, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));        
+    
+    glEnableVertexAttribArray(pacmanPosition);
+    glEnableVertexAttribArray(pacmanTexcoord);
+         
+    // Create an element array
+    GLuint ebo_pacman;
+    glGenBuffers(1, &ebo_pacman);
+    const GLuint elements[] = {
+        0, 1, 2,
+        2, 3, 0
+    };
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_pacman);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
 
+    glBindVertexArray(0);
+
+    //
     // GAMELOOP
+    //
     bool running = true;
     glClearColor(ost::color::BACKGROUND.r,
                  ost::color::BACKGROUND.g,
@@ -164,21 +188,40 @@ int main(int argc, char* argv[]) {
                  ost::color::BACKGROUND.a);
 
     while (running) {
-
-        // INPUT
+        
+        //
+        // UPDATE
+        //
         glfwPollEvents();
         running = (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
                    glfwWindowShouldClose(window) == 0);
 
         update(window);
 
+        //
         // RENDER
+        //
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawArrays(GL_POINTS, 0, buffer.size());
+        
+        { // LEVEL DRAWCALL
+            glUseProgram(levelShader);
+            glBindVertexArray(vao[BUFFER_LEVEL]);
+            glDrawArrays(GL_POINTS, 0, buffer.size());
+            glBindVertexArray(0);
+        }
+        
+        { // SPRITE DRAWCALL
+            glUseProgram(spriteShader);
+            glBindVertexArray(vao[BUFFER_SPRITE]);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }         
         glfwSwapBuffers(window);
     }
 
+    //
     // CLEANUP
+    //
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;

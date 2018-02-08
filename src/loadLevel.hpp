@@ -20,7 +20,7 @@ std::vector<glm::vec2> loadLevel(const char* level_path)
 
         if (in.fail()) {
             std::cerr << "Unable to open " << fname << " I'm out!" << std::endl;
-            exit(-1);
+            PANIC("Y out of range in level read");
         }
 
         // READ LEVEL SIZES
@@ -33,7 +33,7 @@ std::vector<glm::vec2> loadLevel(const char* level_path)
 
         std::string line;
         for(float y=0; y < levelHeight ;y++) {
-            if (in.eof() || in.bad()) {
+            if (in.eof() || in.bad()) {                
                 PANIC("Y out of range in level read");
             }
             std::getline(in, line);
@@ -41,7 +41,9 @@ std::vector<glm::vec2> loadLevel(const char* level_path)
 
             for(float x=0;x < levelWidth;x++) {
                 int n;
-                if(!(ss >> n)) {PANIC("X out of range in level read");} // failed to read, must be end of line
+                if(!(ss >> n)) {
+                    PANIC("X out of range in level read");
+                } // failed to read, must be end of line
                 if(n % 2 == 0) { buffer.push_back(glm::vec2((x/levelWidth)-.5f, ((levelHeight-y)/levelHeight)-.5f) * 2.0f); } // FILL THE BUFFER WITH Vectors - vertex candidate
             }
         }

@@ -21,7 +21,7 @@ GLuint loadTexture(const char* filepath) {
     unsigned char *data = stbi_load(filepath, &width, &height, &channelCount, 0);
 
     if (!data)
-        return 0;
+        PANIC("loadTexture - no data in 'unsigned char *data = stbi_load();'");
 
     GLuint textureID;
     glGenTextures(1, &textureID);

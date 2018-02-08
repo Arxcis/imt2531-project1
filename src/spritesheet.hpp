@@ -12,6 +12,13 @@
 
 namespace ost{
 
+
+const float SPRITESHEET_HEIGHT = 289.0f;
+const float SPRITESHEET_WIDTH  = 439.0f; 
+const float SW = SPRITESHEET_WIDTH;
+const float SH = SPRITESHEET_HEIGHT;
+
+
 struct Rect {
     glm::vec2 topleft;
     glm::vec2 topright;
