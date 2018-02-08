@@ -1,4 +1,4 @@
-// name sprite.hpp
+// name spritesheet.hpp
 // author Jonas J. Solsvik
 // date 06.02.2018
 // license MIT
