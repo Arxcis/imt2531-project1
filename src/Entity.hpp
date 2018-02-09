@@ -32,7 +32,7 @@ struct Entity {
 
     glm::vec2 pos  = {-.9f, .1f};
     glm::vec2 size = { .1f, .1f};
-    glm::vec2 velocity = {.1f, 0.0f};
+    glm::vec2 velocity = {.2f, 0.0f};
     int animationFrame = PACMAN_RIGHT0;
     Direction direction = RIGHT;
     
@@ -66,7 +66,7 @@ struct Entity {
             direction = RIGHT;
         }        
 
-        std::cout << "Direction: " << direction << " velocity: " << velocity.x << ", " << velocity.y << '\n';
+        //std::cout << "Direction: " << direction << " velocity: " << velocity.x << ", " << velocity.y << '\n'; //@debug
      }
 
     std::vector<float> getBuffer() {
@@ -90,7 +90,7 @@ struct Pacman : public Entity {
     {}
 
     void animate(const float dt) override {
-        const float frameTimeLimit = .2f;
+        const float frameTimeLimit = .1f;
         static float deltaFrameTime = 0.0f;
         
         deltaFrameTime += dt;
@@ -100,7 +100,7 @@ struct Pacman : public Entity {
 
             const int framesPerDirection = 4;
             int offset = (animationFrame+1) % framesPerDirection;            
-        
+            offset = (framesPerDirection-1) - offset;   // Reverse animation 
             switch(direction) {
                 case UP: {
                     animationFrame = PACMAN_UP0 + offset;
@@ -132,7 +132,7 @@ struct Ghost : public Entity {
     {} 
 
     void animate(const float dt) override {
-        const float frameTimeLimit = .1f;
+        const float frameTimeLimit = .05f;
         static float deltaFrameTime = 0.0f;
         
         deltaFrameTime += dt;
@@ -141,7 +141,7 @@ struct Ghost : public Entity {
             deltaFrameTime = 0.0f;
 
             const int framesPerDirection = 2;
-            int offset = ((animationFrame+1)%framesPerDirection);
+            const int offset = ((animationFrame+1)%framesPerDirection);
 
             switch(direction) {
                 case UP: {

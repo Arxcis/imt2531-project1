@@ -206,7 +206,6 @@ bool update(GLFWwindow* window, ost::Pacman& pacman) {
     // Configure delta time
     static double baseTime = glfwGetTime();
     static double lastKeyTime = glfwGetTime();
-    const double  keyMinInterval = 0.2;
     double currentTime = glfwGetTime();
     double deltaTime = currentTime - baseTime;
     baseTime = glfwGetTime();
@@ -217,20 +216,18 @@ bool update(GLFWwindow* window, ost::Pacman& pacman) {
         pacman.move(deltaTime);
         pacman.animate(deltaTime);
 
-        if (currentTime - lastKeyTime >  keyMinInterval) {
-            lastKeyTime = glfwGetTime();
-            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   { 
-                pacman.towards(ost::Entity::Direction::UP);   
-            }
-            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  { 
-                pacman.towards(ost::Entity::Direction::DOWN); 
-            }
-            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) { 
-                pacman.towards(ost::Entity::Direction::LEFT); 
-            }
-            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){ 
-                pacman.towards(ost::Entity::Direction::RIGHT); 
-            }
+        lastKeyTime = glfwGetTime();
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   { 
+            pacman.towards(ost::Entity::Direction::UP);   
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  { 
+            pacman.towards(ost::Entity::Direction::DOWN); 
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) { 
+            pacman.towards(ost::Entity::Direction::LEFT); 
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){ 
+            pacman.towards(ost::Entity::Direction::RIGHT); 
         }
     }
     // 2. MOVE GHOSTS
