@@ -50,7 +50,7 @@ enum BufferNames {
 }
 
 inline bool update(GLFWwindow* window, ost::Pacman& pacman);
-inline void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>& levelVertices, const GLuint levelShader, const GLuint spriteShader);
+void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>& levelVertices,const std::vector<float>& pacmanVertices, const GLuint levelShader, const GLuint spriteShader);
 
 
 int main(int argc, char* argv[]) {
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
     const GLint  colorAttribute    = glGetAttribLocation(levelShader, "color");
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo[ost::BUFFER_LEVEL]);
-    glBufferData(GL_ARRAY_BUFFER, levelVertices.size()*sizeof(glm::vec2), levelVertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, levelVertices.size()*sizeof(glm::vec2), levelVertices.data(), GL_STREAM_DRAW);
     glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(positionAttribute);
 
@@ -168,13 +168,13 @@ int main(int argc, char* argv[]) {
     glEnableVertexAttribArray(pacmanTexcoord);
          
     // Create an element array
-    GLuint ebo_pacman;
-    glGenBuffers(1, &ebo_pacman);
+    GLuint ebo;
+    glGenBuffers(1, &ebo);
     const GLuint elements[] = {
         0, 1, 2,
         2, 3, 0
     };
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_pacman);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
     glBindVertexArray(0);
 
@@ -189,7 +189,7 @@ int main(int argc, char* argv[]) {
     bool running = true;
     while (running) {
         running = update(window, pacman);
-        render(window, vao, levelVertices, levelShader, spriteShader);
+        render(window, vao, levelVertices, pacman.getBuffer(), levelShader, spriteShader);
     }
 
     //
@@ -202,12 +202,36 @@ int main(int argc, char* argv[]) {
 
 bool update(GLFWwindow* window, ost::Pacman& pacman) {
     glfwPollEvents();
+    
+    // Configure delta time
+    static double baseTime = glfwGetTime();
+    static double lastKeyTime = glfwGetTime();
+    const double  keyMinInterval = 0.2;
+    double currentTime = glfwGetTime();
+    double deltaTime = currentTime - baseTime;
+    baseTime = glfwGetTime();
 
     // UPDATE
-   
     // 1. MOVE PACMAN -  W, A, S, D
     {
+        pacman.move(deltaTime);
+        pacman.animate(deltaTime);
 
+        if (currentTime - lastKeyTime >  keyMinInterval) {
+            lastKeyTime = glfwGetTime();
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   { 
+                pacman.towards(ost::Entity::Direction::UP);   
+            }
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  { 
+                pacman.towards(ost::Entity::Direction::DOWN); 
+            }
+            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) { 
+                pacman.towards(ost::Entity::Direction::LEFT); 
+            }
+            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){ 
+                pacman.towards(ost::Entity::Direction::RIGHT); 
+            }
+        }
     }
     // 2. MOVE GHOSTS
     {
@@ -226,19 +250,24 @@ bool update(GLFWwindow* window, ost::Pacman& pacman) {
 }
 
 
-void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>& levelVertices, const GLuint levelShader, const GLuint spriteShader) {
+void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>& levelBuffer, const std::vector<float>& pacmanBuffer, const GLuint levelShader, const GLuint spriteShader) {
+      
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         { // LEVEL DRAWCALL
             glUseProgram(levelShader);
             glBindVertexArray(vao[ost::BUFFER_LEVEL]);
-            glDrawArrays(GL_POINTS, 0, levelVertices.size());
+            glDrawArrays(GL_POINTS, 0, levelBuffer.size());
+            glBindVertexArray(0);
         }
         
         { // PACMAN DRAWCALL
             glUseProgram(spriteShader);
             glBindVertexArray(vao[ost::BUFFER_SPRITE]);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, pacmanBuffer.size() * sizeof(float), pacmanBuffer.data());
+            
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);            
         }         
         glfwSwapBuffers(window);
 }
