@@ -21,6 +21,27 @@ enum GhostFrame : int {
 };
 
 struct Entity {
+    Entity(const std::vector<ost::Rect> _uv)
+    :uv(_uv)
+    {}
+    //
+    // BUFFER COMPONENT
+    //
+    const std::vector<ost::Rect> uv;
+    glm::vec2 pos  = {-.9f, .1f};
+    glm::vec2 size = { .1f, .1f};
+    int animationFrame = PACMAN_RIGHT0;
+   
+    std::vector<float> getBuffer() const {
+        ost::Rect _uv = uv[animationFrame];
+        return {
+            pos.x,         pos.y,        _uv.topleft.x,  _uv.topleft.y, 
+            pos.x+size.x,  pos.y,        _uv.topright.x, _uv.topright.y,
+            pos.x+size.x,  pos.y-size.y, _uv.botright.x, _uv.botright.y,
+            pos.x,         pos.y-size.y, _uv.botleft.x,  _uv.botleft.y
+        };
+    }
+
     enum Direction : int {
         UP,
         DOWN, 
@@ -28,19 +49,12 @@ struct Entity {
         RIGHT,
     };
 
-    const std::vector<ost::Rect> uv;
-
-    glm::vec2 pos  = {-.9f, .1f};
-    glm::vec2 size = { .1f, .1f};
+    //
+    // GAME COMPONENT
+    //
     glm::vec2 velocity = {.2f, 0.0f};
-    int animationFrame = PACMAN_RIGHT0;
     Direction direction = RIGHT;
     
-    Entity(const std::vector<ost::Rect> _uv, int _animationFrame)
-    :uv(_uv)
-    ,animationFrame(_animationFrame)
-    {}
-
     void move(const float dt) {
         pos += glm::vec2{ velocity.x*dt, velocity.y*dt};
     }
@@ -68,26 +82,17 @@ struct Entity {
 
         //std::cout << "Direction: " << direction << " velocity: " << velocity.x << ", " << velocity.y << '\n'; //@debug
      }
-
-    std::vector<float> getBuffer() {
-        ost::Rect _uv = uv[animationFrame];
-        return {
-            pos.x,         pos.y,        _uv.topleft.x,  _uv.topleft.y, 
-            pos.x+size.x,  pos.y,        _uv.topright.x, _uv.topright.y,
-            pos.x+size.x,  pos.y-size.y, _uv.botright.x, _uv.botright.y,
-            pos.x,         pos.y-size.y, _uv.botleft.x,  _uv.botleft.y
-        };
-    }
-
-    virtual void animate(const float dt) = 0;    
+    virtual void animate(const float dt) {};    
 };
 
 struct Pacman : public Entity {
 
     Pacman() : Entity(ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f}, 
                                                        {278.0f, 278.0f},
-                                                       {439.0f, 289.0f}),PACMAN_RIGHT0)
-    {}
+                                                       {439.0f, 289.0f}))
+    {
+        animationFrame = PACMAN_RIGHT0;
+    }
 
     void animate(const float dt) override {
         const float frameTimeLimit = .1f;
@@ -128,8 +133,10 @@ struct Ghost : public Entity {
 
     Ghost() : Entity(ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},
                                                        {144.0f, 278.0f},
-                                                       {439.0f, 289.0f}), GHOST_DOWN0) 
-    {} 
+                                                       {439.0f, 289.0f})) 
+    {
+        animationFrame = GHOST_DOWN0;
+    } 
 
     void animate(const float dt) override {
         const float frameTimeLimit = .05f;
@@ -165,4 +172,25 @@ struct Ghost : public Entity {
 
 };
 
+
+struct Dot : public Entity {
+
+    Dot(glm::vec2 _position): Entity(
+        ost::makeSpriteUVCoordinates(1,1,1,{219.0f, 9.0f},
+                                           {61.0f, 61.0f},
+                                           {439.0f, 289.0f}))
+    {
+        pos = _position;
+    }
+    bool active = true;
+};
+
+std::vector<ost::Dot> makeDots(const std::vector<glm::vec2> levelVertices) {
+
+    std::vector<ost::Dot> dotvector{};
+    for (const auto& v : levelVertices) {
+        dotvector.push_back(ost::Dot{ v });
+    }
+    return dotvector;
+}
 } 
