@@ -42,11 +42,15 @@ const int OPENGL_MINOR = 1;
 const char WIN_NAME[] = "Overkill Studio - Assignment1";
 const int WIN_WIDTH   = 1024;
 const int WIN_HEIGHT  = 1024;
+    
+enum BufferNames {
+    BUFFER_LEVEL,
+    BUFFER_SPRITE
+};
 }
 
-void update(const GLFWwindow*);
-inline void update(GLFWwindow* window, bool& running, ost::Pacman& pacman, double& keySpaceDeadtime);
-inline void render(GLFWwindow* window, ost::Pacman& pacman, GLuint vbo); 
+inline bool update(GLFWwindow* window, ost::Pacman& pacman);
+inline void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>& levelVertices, const GLuint levelShader, const GLuint spriteShader);
 
 
 int main(int argc, char* argv[]) {
@@ -95,10 +99,7 @@ int main(int argc, char* argv[]) {
         PANIC("Failed to initialize GLEW");
     }
 
-    enum BufferNames {
-        BUFFER_LEVEL,
-        BUFFER_SPRITE
-    };
+
     //
     // GENERATE GPU BUFFERS
     //
@@ -111,7 +112,7 @@ int main(int argc, char* argv[]) {
     //
     // LOAD ASSETS (map, spritesheet)
     //
-    const std::vector<glm::vec2> buffer = ost::loadLevel("./levels/level0");
+    const std::vector<glm::vec2> levelVertices = ost::loadLevel("./levels/level0");
     const GLuint pacmanTexture = ost::loadTexture("./textures/pacman.png");
     const GLuint levelShader = ost::loadShaderProgram("./shaders/level.vert", "./shaders/level.geo","./shaders/level.frag");
     const GLuint spriteShader = ost::loadShaderProgram("./shaders/sprite.vert", "./shaders/sprite.frag");
@@ -124,7 +125,7 @@ int main(int argc, char* argv[]) {
     //
     // LEVEL SHADER SETUP
     //
-    glBindVertexArray(vao[BUFFER_LEVEL]);
+    glBindVertexArray(vao[ost::BUFFER_LEVEL]);
     const GLint levelColor = glGetUniformLocation(levelShader, "floor_color");
 
     float floorColor[] = {ost::color::FLOOR.r,
@@ -137,8 +138,8 @@ int main(int argc, char* argv[]) {
     const GLint  positionAttribute = glGetAttribLocation(levelShader, "position");
     const GLint  colorAttribute    = glGetAttribLocation(levelShader, "color");
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUFFER_LEVEL]);
-    glBufferData(GL_ARRAY_BUFFER, buffer.size()*sizeof(glm::vec2), buffer.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[ost::BUFFER_LEVEL]);
+    glBufferData(GL_ARRAY_BUFFER, levelVertices.size()*sizeof(glm::vec2), levelVertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(positionAttribute);
 
@@ -148,7 +149,7 @@ int main(int argc, char* argv[]) {
     //
     // SPRITE SHADER SETUP
     //
-    glBindVertexArray(vao[BUFFER_SPRITE]);    
+    glBindVertexArray(vao[ost::BUFFER_SPRITE]);    
     ost::Pacman             pacman{};
     //@todo std::vector<ost::Ghost> ghost{};
 
@@ -157,7 +158,7 @@ int main(int argc, char* argv[]) {
    
     const auto _buffer = pacman.getBuffer();
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[BUFFER_SPRITE]);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[ost::BUFFER_SPRITE]);
     glBufferData(GL_ARRAY_BUFFER, _buffer.size()*sizeof(float), _buffer.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(pacmanPosition, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
@@ -182,41 +183,14 @@ int main(int argc, char* argv[]) {
     // GAMELOOP
     //
     bool running = true;
-    glClearColor(ost::color::BACKGROUND.r,
-                 ost::color::BACKGROUND.g,
-                 ost::color::BACKGROUND.b,
-                 ost::color::BACKGROUND.a);
+    {
+        const Color clear = ost::color::BACKGROUND;
+        glClearColor(clear.r,clear.g,clear.b,clear.a);
+    }
 
     while (running) {
-        
-        //
-        // UPDATE
-        //
-        glfwPollEvents();
-        running = (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-                   glfwWindowShouldClose(window) == 0);
-
-        update(window);
-
-        //
-        // RENDER
-        //
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        { // LEVEL DRAWCALL
-            glUseProgram(levelShader);
-            glBindVertexArray(vao[BUFFER_LEVEL]);
-            glDrawArrays(GL_POINTS, 0, buffer.size());
-            glBindVertexArray(0);
-        }
-        
-        { // SPRITE DRAWCALL
-            glUseProgram(spriteShader);
-            glBindVertexArray(vao[BUFFER_SPRITE]);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
-        }         
-        glfwSwapBuffers(window);
+        running = update(window, pacman);
+        render(window, vao, levelVertices, levelShader, spriteShader);
     }
 
     //
@@ -227,8 +201,11 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void update(const GLFWwindow* window) {
+bool update(GLFWwindow* window, ost::Pacman& pacman) {
+    glfwPollEvents();
+
     // UPDATE
+   
     // 1. MOVE PACMAN -  W, A, S, D
     {
 
@@ -245,4 +222,26 @@ void update(const GLFWwindow* window) {
     {
 
     }
+
+    return (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
+}
+
+
+void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>& levelVertices, const GLuint levelShader, const GLuint spriteShader) {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        { // LEVEL DRAWCALL
+            glUseProgram(levelShader);
+            glBindVertexArray(vao[ost::BUFFER_LEVEL]);
+            glDrawArrays(GL_POINTS, 0, levelVertices.size());
+            glBindVertexArray(0);
+        }
+        
+        { // SPRITE DRAWCALL
+            glUseProgram(spriteShader);
+            glBindVertexArray(vao[ost::BUFFER_SPRITE]);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(0);
+        }         
+        glfwSwapBuffers(window);
 }
