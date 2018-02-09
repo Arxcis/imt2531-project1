@@ -40,8 +40,8 @@ const int OPENGL_MAJOR = 4;
 const int OPENGL_MINOR = 1;
 
 const char WIN_NAME[] = "Overkill Studio - Assignment1";
-const int WIN_WIDTH   = 1024;
-const int WIN_HEIGHT  = 1024;
+const int WIN_WIDTH   = 500;
+const int WIN_HEIGHT  = 500;
     
 enum BufferNames {
     BUFFER_LEVEL,
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
     // GENERATE GPU BUFFERS
     //
     GLuint vao[2];
-    glGenVertexArrays(1, vao);
+    glGenVertexArrays(2, vao);
     
     GLuint vbo[2];
     glGenBuffers(2, vbo);
@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
     const auto _buffer = pacman.getBuffer();
     
     glBindBuffer(GL_ARRAY_BUFFER, vbo[ost::BUFFER_SPRITE]);
-    glBufferData(GL_ARRAY_BUFFER, _buffer.size()*sizeof(float), _buffer.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _buffer.size()*sizeof(float), _buffer.data(), GL_STREAM_DRAW);
 
     glVertexAttribPointer(pacmanPosition, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
     glVertexAttribPointer(pacmanTexcoord, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));        
@@ -176,18 +176,17 @@ int main(int argc, char* argv[]) {
     };
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_pacman);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements), elements, GL_STREAM_DRAW);
-
     glBindVertexArray(0);
+
 
     //
     // GAMELOOP
     //
-    bool running = true;
     {
         const Color clear = ost::color::BACKGROUND;
         glClearColor(clear.r,clear.g,clear.b,clear.a);
     }
-
+    bool running = true;
     while (running) {
         running = update(window, pacman);
         render(window, vao, levelVertices, levelShader, spriteShader);
@@ -234,14 +233,12 @@ void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>
             glUseProgram(levelShader);
             glBindVertexArray(vao[ost::BUFFER_LEVEL]);
             glDrawArrays(GL_POINTS, 0, levelVertices.size());
-            glBindVertexArray(0);
         }
         
-        { // SPRITE DRAWCALL
+        { // PACMAN DRAWCALL
             glUseProgram(spriteShader);
             glBindVertexArray(vao[ost::BUFFER_SPRITE]);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
         }         
         glfwSwapBuffers(window);
 }

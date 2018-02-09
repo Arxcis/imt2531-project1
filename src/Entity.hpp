@@ -32,7 +32,7 @@ struct Entity {
     
     std::vector<float> getBuffer() {
         return {
-            pos.x,         pos.y,        uv[frame].topleft.x, uv[frame].botleft.y, 
+            pos.x,         pos.y,        uv[frame].topleft.x, uv[frame].topleft.y, 
             pos.x+size.x,  pos.y,        uv[frame].topright.x, uv[frame].topright.y,
             pos.x+size.x,  pos.y-size.y, uv[frame].botright.x, uv[frame].botright.y,
             pos.x,         pos.y-size.y, uv[frame].botleft.x, uv[frame].botleft.y
