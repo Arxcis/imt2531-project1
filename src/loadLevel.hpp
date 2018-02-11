@@ -14,12 +14,11 @@ std::vector<glm::vec2> loadLevel(const char* level_path)
 {
     std::vector<glm::vec2> buffer;
     {
-        const char* fname = "./levels/level0";
         std::ifstream in;
-        in.open(fname, std::ios::binary);
+        in.open(level_path, std::ios::binary);
 
         if (in.fail()) {
-            std::cerr << "Unable to open " << fname << " I'm out!" << std::endl;
+            std::cerr << "Unable to open " << level_path << " I'm out!" << std::endl;
             PANIC("Y out of range in level read");
         }
 
@@ -33,7 +32,7 @@ std::vector<glm::vec2> loadLevel(const char* level_path)
 
         std::string line;
         for(float y=0; y < levelHeight ;y++) {
-            if (in.eof() || in.bad()) {                
+            if (in.eof() || in.bad()) {
                 PANIC("Y out of range in level read");
             }
             std::getline(in, line);

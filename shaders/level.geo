@@ -21,22 +21,23 @@ uniform float quadSize = 0.055; //set this uniform based on screenspace->worldsp
     |   O   |
     |     \ |
     0-------1
-    
-*/
 
+*/
 void main()
 {
-    gl_Position = gl_in[0].gl_Position;
+    float q = quadSize*0.5;
+
+    gl_Position = gl_in[0].gl_Position - vec4(q,q,0,0);
     EmitVertex();
 
-    gl_Position = gl_in[0].gl_Position + vec4(quadSize, 0.0, 0.0, 0.0);
+    gl_Position = gl_in[0].gl_Position + vec4(q, -q, 0.0, 0.0);
     EmitVertex();
 
 
-    gl_Position = gl_in[0].gl_Position + vec4(0.0, quadSize, 0.0, 0.0);
+    gl_Position = gl_in[0].gl_Position + vec4(-q, q, 0.0, 0.0);
     EmitVertex();
 
-    gl_Position = gl_in[0].gl_Position + vec4(quadSize, quadSize, 0.0, 0.0);
+    gl_Position = gl_in[0].gl_Position + vec4(q, q, 0.0, 0.0);
     EmitVertex();
 
     EndPrimitive();
