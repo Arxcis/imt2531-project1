@@ -29,13 +29,13 @@ struct Entity {
     //
     const std::vector<ost::Rect> uv;
     glm::vec2 pos  = {-.9f, .1f};
-    glm::vec2 size = { .1f, .1f};
+    glm::vec2 size = { 1.0f, 1.0f };
     int animationFrame = PACMAN_RIGHT0;
-   
+
     std::vector<float> getBuffer() const {
         ost::Rect _uv = uv[animationFrame];
         return {
-            pos.x,         pos.y,        _uv.topleft.x,  _uv.topleft.y, 
+            pos.x,         pos.y,        _uv.topleft.x,  _uv.topleft.y,
             pos.x+size.x,  pos.y,        _uv.topright.x, _uv.topright.y,
             pos.x+size.x,  pos.y-size.y, _uv.botright.x, _uv.botright.y,
             pos.x,         pos.y-size.y, _uv.botleft.x,  _uv.botleft.y
@@ -44,17 +44,17 @@ struct Entity {
 
     enum Direction : int {
         UP,
-        DOWN, 
-        LEFT, 
+        DOWN,
+        LEFT,
         RIGHT,
     };
 
     //
     // GAME COMPONENT
     //
-    glm::vec2 velocity = {.2f, 0.0f};
+    glm::vec2 velocity = { 2.0f, 0.0f};
     Direction direction = RIGHT;
-    
+
     void move(const float dt) {
         pos += glm::vec2{ velocity.x*dt, velocity.y*dt};
     }
@@ -78,16 +78,16 @@ struct Entity {
             velocity.x = (std::abs(velocity.x) + std::abs(velocity.y));
             velocity.y = 0.0f;
             direction = RIGHT;
-        }        
+        }
 
         //std::cout << "Direction: " << direction << " velocity: " << velocity.x << ", " << velocity.y << '\n'; //@debug
      }
-    virtual void animate(const float dt) {};    
+    virtual void animate(const float dt) {};
 };
 
 struct Pacman : public Entity {
 
-    Pacman() : Entity(ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f}, 
+    Pacman() : Entity(ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},
                                                        {278.0f, 278.0f},
                                                        {439.0f, 289.0f}))
     {
@@ -97,34 +97,34 @@ struct Pacman : public Entity {
     void animate(const float dt) override {
         const float frameTimeLimit = .1f;
         static float deltaFrameTime = 0.0f;
-        
+
         deltaFrameTime += dt;
 
         if (deltaFrameTime > frameTimeLimit) {
             deltaFrameTime = 0.0f;
 
             const int framesPerDirection = 4;
-            int offset = (animationFrame+1) % framesPerDirection;            
-            offset = (framesPerDirection-1) - offset;   // Reverse animation 
+            int offset = (animationFrame+1) % framesPerDirection;
+            offset = (framesPerDirection-1) - offset;   // Reverse animation
             switch(direction) {
                 case UP: {
                     animationFrame = PACMAN_UP0 + offset;
                     break;
                 }
                 case DOWN: {
-                    animationFrame = PACMAN_DOWN0 + offset;   
-                    break;
-                }               
-                case LEFT: {
-                    animationFrame = PACMAN_LEFT0 + offset;   
-                    break;
-                }                    
-                case RIGHT: {
-                    //std::cout << "RIGHT! dir:" << direction << " frame: " << animationFrame << " offset: " << offset <<'\n'; // @debug
-                    animationFrame = PACMAN_RIGHT0 + offset;   
+                    animationFrame = PACMAN_DOWN0 + offset;
                     break;
                 }
-            } 
+                case LEFT: {
+                    animationFrame = PACMAN_LEFT0 + offset;
+                    break;
+                }
+                case RIGHT: {
+                    //std::cout << "RIGHT! dir:" << direction << " frame: " << animationFrame << " offset: " << offset <<'\n'; // @debug
+                    animationFrame = PACMAN_RIGHT0 + offset;
+                    break;
+                }
+            }
         }
     }
 };
@@ -133,15 +133,15 @@ struct Ghost : public Entity {
 
     Ghost() : Entity(ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},
                                                        {144.0f, 278.0f},
-                                                       {439.0f, 289.0f})) 
+                                                       {439.0f, 289.0f}))
     {
         animationFrame = GHOST_DOWN0;
-    } 
+    }
 
     void animate(const float dt) override {
         const float frameTimeLimit = .05f;
         static float deltaFrameTime = 0.0f;
-        
+
         deltaFrameTime += dt;
 
         if (deltaFrameTime > frameTimeLimit) {
@@ -156,17 +156,17 @@ struct Ghost : public Entity {
                     break;
                 }
                 case DOWN: {
-                    animationFrame = GHOST_DOWN0 + offset;  
+                    animationFrame = GHOST_DOWN0 + offset;
                     break;
-                }              
-                case LEFT: {
-                    animationFrame = GHOST_LEFT0 + offset;                                
-                    break;
-                }   
-                case RIGHT: {
-                    animationFrame = GHOST_RIGHT0 + offset;                
                 }
-            } 
+                case LEFT: {
+                    animationFrame = GHOST_LEFT0 + offset;
+                    break;
+                }
+                case RIGHT: {
+                    animationFrame = GHOST_RIGHT0 + offset;
+                }
+            }
         }
     }
 
@@ -193,4 +193,4 @@ std::vector<ost::Dot> makeDots(const std::vector<glm::vec2> levelVertices) {
     }
     return dotvector;
 }
-} 
+}

@@ -11,6 +11,7 @@ namespace ost
         :vertices(_vertices)
         {
             size = _size;
+            biggestSize = (_size.x > _size.y) ? _size.x : _size.y;
         }
         //
         // BUFFER COMPONENT
@@ -18,7 +19,7 @@ namespace ost
         const std::vector<vec2> vertices;
 
         //TODO consider changing vertices to ivec2 as they should be in world space units
-
+        int biggestSize;
         ivec2 size = { 28, 32 };
 
         // std::vector<vec2> getBuffer() const {

@@ -40,8 +40,8 @@ const int OPENGL_MAJOR = 4;
 const int OPENGL_MINOR = 1;
 
 const char WIN_NAME[] = "Overkill Studio - Assignment1";
-const int WIN_WIDTH   = 500;
-const int WIN_HEIGHT  = 500;
+const int WIN_WIDTH   = 1000;
+const int WIN_HEIGHT  = 1000;
 
 enum VAONames {
     VAO_LEVEL  = 0x0,
@@ -58,21 +58,6 @@ void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>
 
 
 int main(int argc, char* argv[]) {
-
-    int _selectedLevel = 0;
-
-    // PROCESS ARGUMENTS
-    if (argc > 2) {
-        PANIC("Too many arguments from command-line");
-    }
-    if (argc == 2) {
-        _selectedLevel = atoi(argv[1]);
-    }
-    if (_selectedLevel < 0 || _selectedLevel >= ost::LEVEL_COUNT) {
-        PANIC("Level not available");
-    }
-    const int selectedLevel = _selectedLevel;
-    printf("Starting level %d\n", selectedLevel);
 
     // INITIALIZE G L F W
     if (!glfwInit()){
@@ -117,14 +102,37 @@ int main(int argc, char* argv[]) {
     // LOAD ASSETS (map, spritesheet)
     //
     const ost::Level level = ost::loadLevel("./levels/level0");
+
     const GLuint pacmanTexture = ost::loadTexture("./textures/pacman.png");
     const GLuint levelShader = ost::loadShaderProgram("./shaders/level.vert", "./shaders/level.geo","./shaders/level.frag");
     const GLuint spriteShader = ost::loadShaderProgram("./shaders/sprite.vert", "./shaders/sprite.frag");
 
-    // @todo - 08.02.17
-    // GLint quadSize = glGetUniformLocation(levelShader, "quadSize");
-    // glUniform1f(quadSize, 2f/levelWidth);
 
+    //
+    float worldUnit = 2.0f/level.biggestSize;
+    {
+        glm::mat4 viewMatrix(
+            worldUnit,      0,      0,      0,
+            0,      worldUnit,      0,      0,
+            0,      0,              1,      0,
+            0,      0,              0,      1
+        );
+
+        glUseProgram(levelShader);
+        GLint quadSizeLocation = glGetUniformLocation(levelShader, "quadSize");
+        glUniform1f(quadSizeLocation, worldUnit);
+
+        GLint viewMatrixLocation = glGetUniformLocation(levelShader, "view");
+        glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+        glUseProgram(0);
+        glUseProgram(spriteShader);
+
+        viewMatrixLocation = glGetUniformLocation(spriteShader, "view");
+        glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+        glUseProgram(0);
+
+    }
 
     //
     // LEVEL SHADER SETUP
