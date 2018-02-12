@@ -109,26 +109,18 @@ int main(int argc, char* argv[]) {
 
 
     //
-    float worldUnit = 2.0f/level.biggestSize;
     {
-        glm::mat4 viewMatrix(
-            worldUnit,      0,      0,      0,
-            0,      worldUnit,      0,      0,
-            0,      0,              1,      0,
-            0,      0,              0,      1
-        );
-
         glUseProgram(levelShader);
         GLint quadSizeLocation = glGetUniformLocation(levelShader, "quadSize");
-        glUniform1f(quadSizeLocation, worldUnit);
+        glUniform1f(quadSizeLocation, level.levelUnit);
 
         GLint viewMatrixLocation = glGetUniformLocation(levelShader, "view");
-        glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+        glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(level.viewMatrix));
         glUseProgram(0);
         glUseProgram(spriteShader);
 
         viewMatrixLocation = glGetUniformLocation(spriteShader, "view");
-        glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+        glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, glm::value_ptr( level.viewMatrix));
 
         glUseProgram(0);
 
