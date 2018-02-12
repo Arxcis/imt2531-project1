@@ -42,7 +42,7 @@ const int OPENGL_MINOR = 1;
 const char WIN_NAME[] = "Overkill Studio - Assignment1";
 const int WIN_WIDTH   = 500;
 const int WIN_HEIGHT  = 500;
-    
+
 enum VAONames {
     VAO_LEVEL  = 0x0,
     VAO_SPRITE = 0x1,
@@ -109,14 +109,14 @@ int main(int argc, char* argv[]) {
     //
     GLuint vao[2];
     glGenVertexArrays(2, vao);
-    
+
     GLuint vbo[2];
     glGenBuffers(2, vbo);
 
     //
     // LOAD ASSETS (map, spritesheet)
     //
-    const std::vector<glm::vec2> levelVertices = ost::loadLevel("./levels/level0");
+    const ost::Level level = ost::loadLevel("./levels/level0");
     const GLuint pacmanTexture = ost::loadTexture("./textures/pacman.png");
     const GLuint levelShader = ost::loadShaderProgram("./shaders/level.vert", "./shaders/level.geo","./shaders/level.frag");
     const GLuint spriteShader = ost::loadShaderProgram("./shaders/sprite.vert", "./shaders/sprite.frag");
@@ -143,7 +143,7 @@ int main(int argc, char* argv[]) {
     const GLint  colorAttribute    = glGetAttribLocation(levelShader, "color");
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo[ost::VBO_LEVEL]);
-    glBufferData(GL_ARRAY_BUFFER, levelVertices.size()*sizeof(glm::vec2), levelVertices.data(), GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, level.vertices.size()*sizeof(glm::vec2), level.vertices.data(), GL_STREAM_DRAW); //TODO Shouldn't this be GL_STATIC_DRAW
     glVertexAttribPointer(positionAttribute, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(positionAttribute);
 
@@ -153,26 +153,26 @@ int main(int argc, char* argv[]) {
     //
     // SPRITE SHADER SETUP
     //
-    glBindVertexArray(vao[ost::VAO_SPRITE]);    
+    glBindVertexArray(vao[ost::VAO_SPRITE]);
     ost::Pacman pacman{};
-    std::vector<ost::Dot> dots = ost::makeDots(levelVertices);
+    std::vector<ost::Dot> dots = ost::makeDots(level.vertices);
     std::vector<ost::Ghost> ghost{};
 
     const GLint  spriteVertexPos = glGetAttribLocation(spriteShader, "position");
     const GLint  spriteTexPos = glGetAttribLocation(spriteShader, "texcoord");
-   
-    
+
+
     auto spriteBuffer = pacman.getBuffer();
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo[ost::VBO_SPRITE]);
     glBufferData(GL_ARRAY_BUFFER, spriteBuffer.size()*sizeof(float), spriteBuffer.data(), GL_STREAM_DRAW);
 
     glVertexAttribPointer(spriteVertexPos, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, 0);
-    glVertexAttribPointer(spriteTexPos, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));        
-    
+    glVertexAttribPointer(spriteTexPos, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));
+
     glEnableVertexAttribArray(spriteVertexPos);
     glEnableVertexAttribArray(spriteTexPos);
-         
+
     // Create an element array
     GLuint ebo;
     glGenBuffers(1, &ebo);
@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
         running = update(window, pacman);
 
         spriteBuffer = pacman.getBuffer();
-        render(window, vao, levelVertices, spriteBuffer, levelShader, spriteShader);
+        render(window, vao, level.vertices, spriteBuffer, levelShader, spriteShader);
     }
 
     //
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]) {
 
 bool update(GLFWwindow* window, ost::Pacman& pacman) {
     glfwPollEvents();
-    
+
     // Configure delta time
     static double baseTime = glfwGetTime();
     static double lastKeyTime = glfwGetTime();
@@ -225,17 +225,26 @@ bool update(GLFWwindow* window, ost::Pacman& pacman) {
         pacman.animate(deltaTime);
 
         lastKeyTime = glfwGetTime();
-        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   { 
-            pacman.towards(ost::Entity::Direction::UP);   
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   {
+
+            /*
+            TODO:
+            if(level.isWalkable(pacman.position+glm::normalized(pacman.velocity)))
+            {
+                MOVE
+            }
+            */
+
+            pacman.towards(ost::Entity::Direction::UP);
         }
-        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  { 
-            pacman.towards(ost::Entity::Direction::DOWN); 
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  {
+            pacman.towards(ost::Entity::Direction::DOWN);
         }
-        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) { 
-            pacman.towards(ost::Entity::Direction::LEFT); 
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) {
+            pacman.towards(ost::Entity::Direction::LEFT);
         }
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){ 
-            pacman.towards(ost::Entity::Direction::RIGHT); 
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){
+            pacman.towards(ost::Entity::Direction::RIGHT);
         }
     }
     // 2. MOVE GHOSTS
@@ -256,22 +265,22 @@ bool update(GLFWwindow* window, ost::Pacman& pacman) {
 
 
 void render(GLFWwindow* window, const GLuint vao[], const std::vector<glm::vec2>& levelBuffer, const std::vector<float>& spriteBuffer, const GLuint levelShader, const GLuint spriteShader) {
-      
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         { // LEVEL DRAWCALL
             glUseProgram(levelShader);
             glBindVertexArray(vao[ost::VAO_LEVEL]);
             glDrawArrays(GL_POINTS, 0, levelBuffer.size());
             glBindVertexArray(0);
         }
-        
+
         { // SPRITE DRAWCALL
             glUseProgram(spriteShader);
             glBindVertexArray(vao[ost::VAO_SPRITE]);
             glBufferSubData(GL_ARRAY_BUFFER, 0, spriteBuffer.size() * sizeof(float), spriteBuffer.data());
             glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);            
-        }         
+            glBindVertexArray(0);
+        }
         glfwSwapBuffers(window);
 }

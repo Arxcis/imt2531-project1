@@ -8,7 +8,7 @@ void main()
     outColor = texture(texPacman, Texcoord);
 
     // @temporary @hack found here https://gamedev.stackexchange.com/a/149613 - 04.02.18
-    if (outColor.a <= 0.0) {
+    if (outColor.a <= 0.2) {
         discard;
     }
 }

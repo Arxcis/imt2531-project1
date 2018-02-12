@@ -4,16 +4,15 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
+#include "./Level.hpp"
 #include "./macro.hpp"
 #include "glm/glm.hpp"
 
 namespace ost {
 
-std::vector<glm::vec2> loadLevel(const char* level_path)
+Level loadLevel(const char* level_path)
 {
     std::vector<glm::vec2> buffer;
-    {
         std::ifstream in;
         in.open(level_path, std::ios::binary);
 
@@ -29,6 +28,7 @@ std::vector<glm::vec2> loadLevel(const char* level_path)
         std::size_t levelWidth = std::stoi(sizeDefs.substr(0, delimIndex));
         std::size_t levelHeight = std::stoi(sizeDefs.substr(delimIndex+1, sizeDefs.size()-delimIndex+1));
 
+        float levelSize = (levelWidth > levelHeight) ? levelWidth : levelHeight; //select the biggest size as we'll draw maps in a 1:1
 
         std::string line;
         for(float y=0; y < levelHeight ;y++) {
@@ -41,13 +41,16 @@ std::vector<glm::vec2> loadLevel(const char* level_path)
             for(float x=0;x < levelWidth;x++) {
                 int n;
                 if(!(ss >> n)) {
-                    PANIC("X out of range in level read");
+                    PANIC("X out of range while reading level level read");
                 } // failed to read, must be end of line
-                if(n % 2 == 0) { buffer.push_back(glm::vec2((x/levelWidth)-.5f, ((levelHeight-y)/levelHeight)-.5f) * 2.0f); } // FILL THE BUFFER WITH Vectors - vertex candidate
+                if(n % 2 == 0) { buffer.push_back(glm::vec2(x-levelWidth*0.5f, (levelSize-y)-levelHeight*0.5f)/levelSize ); } // FILL THE BUFFER WITH Vectors - vertex candidate
             }
         }
-    }
-    return buffer;
+
+    Level lvl(buffer, glm::vec2(levelWidth,levelHeight));
+
+    //TODO return levelSize to be able to set the uniform view matrix
+    return lvl;
 }
 
 }
