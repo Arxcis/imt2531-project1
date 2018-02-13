@@ -16,13 +16,14 @@ namespace ost
 
     using namespace glm;
     struct Level {
-        
+
         const std::vector<std::vector<int>> grid;
         const std::vector<vec2> vertices;
         const ivec2 size;
         const int biggestSize;
         const float levelUnit;
-        const mat4 viewMatrix;
+        const mat4 scaleMatrix;
+        const mat4 moveMatrix;
 
 
         Level(const std::vector<vec2> _vertices, const ivec2 _size, const std::vector<std::vector<int>> _grid):
@@ -31,13 +32,22 @@ namespace ost
         grid(_grid),
         biggestSize((_size.x > _size.y) ? _size.x : _size.y),
         levelUnit(2.0f/(biggestSize)),
-        viewMatrix(
-            mat4(levelUnit, 0,              0,      0,
+        scaleMatrix(
+            mat4(
+                levelUnit,  0,              0,      0,
                 0,          levelUnit,      0,      0,
                 0,          0,              1,      0,
                 0,          0,              0,      1
             )
-        )
+        ),
+        moveMatrix(
+            mat4(
+                1,        0,        0,      0,
+                0,        1,        0,      0,
+                0,        0,        1,      0,
+                -_size.x, -_size.y, 0,      1
+            )
+        ),
         {
             printf("LEVEL DEBUG INFO:\n");
             printf("size: (x:%d,y:%d)\n", size.x, size.y);
