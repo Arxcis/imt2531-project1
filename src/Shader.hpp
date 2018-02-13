@@ -245,4 +245,16 @@ setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 
     glUseProgram(0);    
 }
 
+inline void
+setUniformMat4(const Shader& shader, const std::string uniname, const glm::mat4 univalue) {
+
+    glUseProgram(shader.program);
+    GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
+    if (uniform == -1) {
+        PANIC("UNIFORM == -1");
+    }
+    glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(univalue));
+    glUseProgram(0);    
+}
+
 } // END NAMESPACE OST

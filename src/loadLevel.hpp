@@ -14,6 +14,7 @@ Level loadLevel(const char* level_path)
 {
     std::vector<glm::vec2> buffer;
     std::vector<std::vector<int>> grid;
+
         std::ifstream in;
         in.open(level_path, std::ios::binary);
 
@@ -38,6 +39,7 @@ Level loadLevel(const char* level_path)
             }
             std::getline(in, line);
             std::stringstream ss(line);
+
 
             grid.push_back(std::vector<int>{});
 

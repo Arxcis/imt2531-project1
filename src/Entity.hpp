@@ -70,7 +70,7 @@ struct Pacman {
     const float                 speed = 2.0f;
     const std::vector<ost::Vertex>::iterator vertexBufferIt;
     const std::vector<int>::iterator         elementBufferIt;
-    const ost::Level&            level;
+    ost::Level&            level;
     const int bufferOffset;
     
     glm::vec2                    pos;
@@ -82,7 +82,7 @@ struct Pacman {
            const std::vector<int>::iterator         _elementBuffer,
            const int _bufferOffset,
            const glm::vec2 _pos,
-           const ost::Level& _level
+            ost::Level& _level
            ) 
 
     :vertexBufferIt(_vertexBuffer)
@@ -95,46 +95,25 @@ struct Pacman {
     }
 
     void move(const float dt) {
+        static float rail = 0.0f;
+        rail += dt*speed;
 
-       // auto tilePosition = level.vertices[(int(pos.x)+level.size.x) + (int(pos.y))];
-        static glm::vec2 rail = {1.0f, 0.0f};
-        
-        auto ix = int(pos.x+(level.size.x/2));
-        auto iy = level.size.y - int(pos.y+level.size.y/2);
-        int nextTileValue = level.grid[iy-direction.y][ix+direction.x];
-        
-        // If pacman crosses the middle of a tile
-        if (rail.x < 0.00001f && rail.y < 0.00001f) {
-            direction = wantedDirection;
-            rail = direction;
-
-
-            // If the next tile forward is still not a wall, keep moving
-            if (nextTileValue != ost::WALL) {
-                rail = glm::vec2{direction.x, direction.y}; 
+        if (rail >= 1.0f) {
+            if (level.isWalkable(pos, wantedDirection)) {
+                direction = wantedDirection;
+                rail = 0.0f;
             }
-    /*        std::cout << nextTileValue << " | "
-                      << pos.x << " " << pos.y << " | "
-                      << ix    << " " << iy    << '\n'; */
         } else {
-            auto step = glm::vec2{direction.x * dt * speed, direction.y * dt * speed};
-            if (nextTileValue != ost::WALL) {
-                rail -= step;      
-                pos += step;
-            }        
+            pos += glm::vec2{ direction.x , direction.y} * dt * speed;
         }
     }
 
 
 
-    void towards(const glm::ivec2 _wantedDirection, const Level& level) {
+    void towards(const glm::ivec2 _wantedDirection, Level& level) {
 
         if (_wantedDirection != direction) {
-            auto ix = int(pos.x)+(level.size.x/2)-1;
-            auto iy = level.size.y - (int(pos.y)+(level.size.y/2));     
-            auto wantedTileValue = level.grid[iy-_wantedDirection.y][ix+_wantedDirection.x];
-
-            if (wantedTileValue != ost::WALL) {
+            if (level.isWalkable(pos, _wantedDirection)) {
                 wantedDirection = _wantedDirection;        
             }
         }
@@ -237,9 +216,7 @@ struct Ghost {
 
 };
 
-
 struct Cheese {
-
     const std::vector<ost::Vertex>::iterator vertexBufferIt;
     glm::vec2 pos;
 

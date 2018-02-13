@@ -7,10 +7,10 @@
 namespace ost
 {
     enum TileTypes : int {
-        FLOOR = 0,
-        WALL = 1,
+        FLOOR  = 0,
+        WALL   = 1,
         PORTAL = 2,
-        FOOD = 3
+        FOOD   = 3
     };
 
 
@@ -30,7 +30,7 @@ namespace ost
         //
         // BUFFER COMPONENT
         //
-        const std::vector<vec2> vertices;
+        const std::vector<vec2>             vertices;
         const std::vector<std::vector<int>> grid;
 
         void bindBufferVertices(const std::vector<Vertex>::iterator vertexBufferIterator) const {
@@ -49,15 +49,16 @@ namespace ost
         //     return vertices.data();
         // }
 
-        // check if the coordinate is walkable floor
-        bool isWalkable(const vec2 coordinate) const {
-            return std::find_if(
-                vertices.begin(),
-                vertices.end(),
-                [coordinate](vec2 _lvlCoord){
-                    return distance(_lvlCoord, coordinate) < 0.8f;
-                }
-            ) != vertices.end();
+
+        bool isWalkable(glm::vec2 coordinate, glm::ivec2 direction) {
+
+            const int ix   = int(coordinate.x + (size.x/2.0f));
+            const int iy   = size.y - int(coordinate.y + (size.y/2.0f));
+            const int tile = grid[iy+direction.y][ix+direction.x];
+
+            std::cout << "ix: " << ix << " iy: " << iy << " tile: " << tile << " \n";
+
+            return (tile != ost::WALL);
         }
     };
 
