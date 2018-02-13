@@ -67,7 +67,7 @@ struct Pacman {
     
     const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
     const glm::vec2             size = { 1.0f, 1.0f };
-    const float                 speed = 2.0f;
+    const float                 speed = 3.0f;
     const std::vector<ost::Vertex>::iterator vertexBufferIt;
     const std::vector<int>::iterator         elementBufferIt;
     ost::Level&            level;
@@ -95,15 +95,22 @@ struct Pacman {
     }
 
     void move(const float dt) {
-        level.isWalkable(pos, size, direction);
-        pos += glm::vec2{direction} * dt * speed;
+        if (level.canWalkToward(pos, size, direction))
+            pos += glm::vec2{direction} * dt * speed;
+            
     }
-
-
 
     void towards(const glm::ivec2 _wantedDirection, Level& level) {
-        direction = _wantedDirection;
+        
+        if (_wantedDirection != direction) {
+            if (level.canChangeDirection(pos, size, direction, _wantedDirection)){
+                direction = _wantedDirection;  
+                pos = level.getTileSnapPosition(pos, size);
+            }
+        }
     }
+
+
 
     void animate(const float dt) {
         const float frameTimeLimit = .017f*4;

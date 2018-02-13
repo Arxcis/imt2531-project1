@@ -23,6 +23,7 @@
 #include "./spritesheet.hpp"
 #include "./logger.h"
 
+#define LOG_NO_DEBUG 1
 
 //DISCUSSION: using Color = float[4]; instead?
 struct Color {
@@ -79,7 +80,7 @@ int main(int argc, char* argv[]) {
 
     LOG_INFO("INIT SPRITE SHADER");
     ost::Shader spriteShader = ost::makeShader_VBO_EBO(spriteShaderProgram, 24, 36, GL_STREAM_DRAW, GL_TRIANGLES);
-    ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {0.0f, 16.0f}, level};
+    ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {0.0f, 17.0f}, level};
    // ost::Ghost ghost1        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   4, {-9.0f, 1.5f}};
    // ost::Ghost ghost2        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   8, {-5.0f, 1.5f}};
     ost::setUniformMat4(spriteShader, "scale", level.scaleMatrix);

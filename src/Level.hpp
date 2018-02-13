@@ -61,14 +61,74 @@ namespace ost
             }
         }
 
-        bool isWalkable(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction) {
 
-            glm::ivec2 gridCoordinate{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};
-            LOG_DEBUG("x: %d, y: %d  dx: %d, dy: %d, tt: %d , wt: %d", gridCoordinate.x, gridCoordinate.y, direction.x, direction.y,grid[gridCoordinate.y][gridCoordinate.x],  grid[gridCoordinate.y+direction.y][gridCoordinate.x+direction.x]);
-
-            auto wantTile = grid[gridCoordinate.y+direction.y][gridCoordinate.x+direction.x];
-            return wantTile != ost::WALL;
+        private:
+        glm::vec2 getCenterPosition(glm::vec2 coordinate, glm::vec2 size) 
+        {
+            return glm::vec2{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};   
         }
+        public:
+        glm::vec2 getTileSnapPosition(glm::vec2 coordinate, glm::vec2 size) 
+        {
+            const auto center = getCenterPosition(coordinate, size);            
+            return glm::vec2{ int(center.x), int(center.y)+1 };
+        }
+
+        bool canWalkToward(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction) 
+        {
+            const auto center = getCenterPosition(coordinate, size);
+            const auto gridIndex = glm::ivec2{center.x, center.y};
+
+            const auto wantTile = grid[gridIndex.y +  direction.y ][gridIndex.x + direction.x];
+
+            LOG_DEBUG("cx: %.2f cy: %.2f ix: %d, iy: %d  dx: %.2f, dy: %.2f, tt: %d , wt: %d", center.x, center.y, gridIndex.x, gridIndex.y, direction.x*0.5, direction.y*0.5, grid[gridIndex.y][gridIndex.x],  grid[gridIndex.y+direction.y][gridIndex.x+direction.x]);
+
+            if (wantTile == ost::WALL) {
+                if (isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center)) {
+                    return false;
+                } 
+            } 
+            return true;
+        }
+
+        bool canChangeDirection(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction, glm::ivec2 wantedDirection) 
+        {
+            const auto center = getCenterPosition(coordinate, size);
+            const auto gridIndex = glm::ivec2{center.x, center.y};
+
+            if (!canWalkToward(coordinate, size, wantedDirection)) {
+                return false;
+            }
+            
+            return (isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center));
+        }
+
+        bool isCloseEnoughToTheMiddleOfTile(const glm::ivec2 direction, const glm::ivec2 gridIndex, const glm::vec2 center) 
+        {
+            const float margin = 0.4f;
+
+            if (direction.y > 0 && direction.x > 0) {
+                LOG_ERROR("OMG, direction.x and direction.y is both > 0. DIAGONAL movement not supported!");
+            }
+
+            if( direction.y == 0 && direction.x == 0){
+                LOG_ERROR("ENTITY does not have any direction. Undefined behaviour!");                
+            }
+
+            if (direction.y == 0) {
+             //   LOG_DEBUG("(center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin) %d\n", (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin));
+                
+                return (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin);
+            } else {
+               // LOG_DEBUG("(center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin) %d\n", (center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin));
+                
+                return (center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin);
+            }
+
+            LOG_ERROR("HOW DA FUCK DID YOU GET ALL THE WAY HERE !??????? ");            
+        }
+
+
     };
 
 }
