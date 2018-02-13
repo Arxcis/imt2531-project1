@@ -67,14 +67,14 @@ int main(int argc, char* argv[]) {
     const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/cheese.frag");
 
 
-
     LOG_DEBUG("INIT LEVEL SHADER");
     ost::Shader levelShader = ost::makeShader_VBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
     level.bindBufferVertices( getVertexBufferIt(levelShader, level.vertices.size()) );
     ost::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
     ost::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
 
-    ost::setUniformMat4(levelShader, "scale", level.viewMatrix);
+    ost::setUniformMat4(levelShader, "scale", level.scaleMatrix);
+    ost::setUniformMat4(levelShader, "move", level.moveMatrix);
 
 
 
@@ -83,7 +83,8 @@ int main(int argc, char* argv[]) {
     ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {0.0f, 16.0f}, level};
    // ost::Ghost ghost1        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   4, {-9.0f, 1.5f}};
    // ost::Ghost ghost2        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   8, {-5.0f, 1.5f}};
-    ost::setUniformMat4(spriteShader, "scale", level.viewMatrix);
+    ost::setUniformMat4(spriteShader, "scale", level.scaleMatrix);
+    ost::setUniformMat4(spriteShader, "move", level.moveMatrix);
 
 
 
@@ -93,7 +94,8 @@ int main(int argc, char* argv[]) {
         ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v};
     }
     ost::setUniformFloat(cheeseShader, "pointSize", 5.0f);
-    ost::setUniformMat4(cheeseShader, "scale", level.viewMatrix);
+    ost::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
+    ost::setUniformMat4(cheeseShader, "move", level.moveMatrix);
 
 
     //
