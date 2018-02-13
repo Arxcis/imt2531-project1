@@ -209,6 +209,7 @@ struct Ghost {
                 }
                 case RIGHT: {
                     animationFrame = GHOST_RIGHT0 + offset;
+                    break;
                 }
             }
             bufferUpdateRect(vertexBufferIt, pos, size, uv[animationFrame]);            

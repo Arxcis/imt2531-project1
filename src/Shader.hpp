@@ -95,11 +95,11 @@ makeShader(const GLuint  program,
     return shader;
 }
 
-inline void 
+
+void 
 draw(const Shader& shader) 
 {
-    glUseProgram(shader.program);
-    
+    glUseProgram(shader.program);   
     glBindVertexArray(shader.vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
@@ -110,6 +110,8 @@ draw(const Shader& shader)
 
     } else {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
+
+       // std::cout << "esize: " << shader.elementBuffer.size() << " vsize: " <<shader.vertexBuffer.size() << "\n";
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, shader.elementBuffer.size()*sizeof(int), shader.elementBuffer.data());
         glDrawElements(shader.drawMode, shader.elementBuffer.size(), GL_UNSIGNED_INT, 0);
     }
@@ -118,10 +120,10 @@ draw(const Shader& shader)
 }
 
 //
-// @function vertexBufferIt
+// @function getVertexBufferIt
 //
 inline const std::vector<Vertex>::iterator
-vertexBufferIt(Shader& shader, const size_t vertexCount)
+getVertexBufferIt(Shader& shader, const size_t vertexCount)
 {
     if (vertexCount + shader.vertexBuffer.size() > shader.maxVertexCount ) {
         PANIC("PREVENTED VERTEX BUFFER OVERFLOW");
@@ -133,10 +135,10 @@ vertexBufferIt(Shader& shader, const size_t vertexCount)
 }
 
 //
-// @function elementBufferIt
+// @function getElementBufferIt
 //
 inline const std::vector<int>::iterator
-elementBufferIt(Shader& shader, const size_t elementCount) 
+getElementBufferIt(Shader& shader, const size_t elementCount) 
 {
     if (elementCount + shader.elementBuffer.size() > shader.maxElementCount ) {
         PANIC("PREVENTED ELEMENT BUFFER OVERFLOW");
@@ -148,9 +150,8 @@ elementBufferIt(Shader& shader, const size_t elementCount)
     return it;
 }
 
-
 //
-// @function elementBufferIt
+// @function setUniformFloat
 //
 inline void 
 setUniformFloat(const Shader& shader, const std::string uniname, const float univalue) 
@@ -164,6 +165,9 @@ setUniformFloat(const Shader& shader, const std::string uniname, const float uni
     glUseProgram(0);
 }
 
+//
+// @function setUniformVec4
+//
 inline void 
 setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 univalue) 
 {
@@ -176,16 +180,4 @@ setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 
     glUseProgram(0);    
 }
 
-inline void 
-setUniformVec4(const Shader& shader, const std::string uniname, const float univalue[]) 
-{
-    glUseProgram(shader.program);
-    GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
-    if (uniform == -1) {
-        PANIC("UNIFORM == -1");
-    }
-    glUniform4fv(uniform, 1, univalue);
-    glUseProgram(0);    
-}
-
-}
+} // END NAMESPACE OST
