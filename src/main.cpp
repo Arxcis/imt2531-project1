@@ -57,14 +57,18 @@ int main(int argc, char* argv[]) {
     glEnable(GL_PROGRAM_POINT_SIZE);
     glClearColor(BACKGROUND.r,BACKGROUND.g,BACKGROUND.b,BACKGROUND.a);
 
-    // LOAD FILES
+
+
+    LOG_DEBUG("LOADING FILES");    
     ost::Level level                 = ost::loadLevel("./levels/level0");
     const GLuint levelShaderProgram  = ost::loadShaderProgram("./shaders/general.vert", "./shaders/level.geo","./shaders/level.frag");
     const GLuint pacmanTexture       = ost::loadTexture("./textures/pacman.png");
     const GLuint spriteShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/sprite.frag");
     const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/cheese.frag");
 
-    LOG_DEBUG("INIT LEVEL SHADER\n");
+
+
+    LOG_DEBUG("INIT LEVEL SHADER");
     ost::Shader levelShader = ost::makeShader_VBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
     level.bindBufferVertices( getVertexBufferIt(levelShader, level.vertices.size()) );
     ost::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
@@ -74,7 +78,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    LOG_DEBUG("INIT SPRITE SHADER\n");
+    LOG_DEBUG("INIT SPRITE SHADER");
     ost::Shader spriteShader = ost::makeShader_VBO_EBO(spriteShaderProgram, 24, 36, GL_STREAM_DRAW, GL_TRIANGLES);
     ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {0.0f, 16.0f}, level};
    // ost::Ghost ghost1        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   4, {-9.0f, 1.5f}};
@@ -83,7 +87,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    LOG_DEBUG("INIT CHEESE SHADER\n");
+    LOG_DEBUG("INIT CHEESE SHADER");
     ost::Shader cheeseShader = ost::makeShader_VBO(cheeseShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
     for (auto v : level.vertices) {
         ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v + glm::vec2(0.5f,-0.5f)};

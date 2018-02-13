@@ -5,6 +5,7 @@
 
 #include "GLFW/glfw3.h"
 #include "./macro.hpp"
+#include "./logger.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -46,22 +47,10 @@ struct Shader
 inline void
 _bindVertexArrayAttributes(Shader& shader) {
     shader.positionAttribute = glGetAttribLocation(shader.program, "position");
-    if (shader.positionAttribute == -1) {
-        PANIC("shader.positionAttribute == -1");
-    }
-
-    printf("%lu\n", shader.positionAttribute);
     shader.colorAttribute = glGetAttribLocation(shader.program, "color");
-
-        printf("%lu\n", glGetAttribLocation(shader.program, "color"));
-    if (shader.colorAttribute == -1) {
-        printf("%d\n", shader.program);
-        // PANIC("shader.colorAttribute == -1");
-    }
     shader.texcoordAttribute = glGetAttribLocation(shader.program, "texcoord");
-    if (shader.texcoordAttribute == -1) {
-        // PANIC("shader.texcoordAttribute == -1");
-    }
+
+    LOG_DEBUG("shader.program: %d, shader.positionAttribute: %d, shader.colorAttribute: %d, shader.texcoordAttribute: %d", shader.program, shader.positionAttribute, shader.colorAttribute, shader.texcoordAttribute)
 
     glVertexAttribPointer(shader.positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glVertexAttribPointer(shader.colorAttribute,    4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec2));
