@@ -37,11 +37,11 @@ struct Shader
     GLuint maxVertexCount;
     GLuint maxElementCount;
 
-    std::vector<Vertex>           vertexBuffer{};
-    size_t                        vertexBufferCount{};
+    std::vector<Vertex> vertexBuffer{};
+    std::size_t         vertexBufferCount{};
 
-    std::vector<int>              elementBuffer{};
-    size_t                        elementBufferCount{};
+    std::vector<int>    elementBuffer{};
+    std::size_t         elementBufferCount{};
 };
 
 inline void

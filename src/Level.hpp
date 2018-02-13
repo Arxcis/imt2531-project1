@@ -13,7 +13,6 @@ namespace ost
         FOOD   = 3
     };
 
-
     using namespace glm;
     struct Level {
 
@@ -62,15 +61,13 @@ namespace ost
             }
         }
 
-        bool isWalkable(glm::vec2 coordinate, glm::ivec2 direction) {
+        bool isWalkable(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction) {
 
-            const int ix   = int(coordinate.x + (size.x/2.0f));
-            const int iy   = size.y - int(coordinate.y + (size.y/2.0f));
-            const int tile = grid[iy+direction.y][ix+direction.x];
+            glm::ivec2 gridCoordinate{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};
+            LOG_DEBUG("x: %d, y: %d  dx: %d, dy: %d, tt: %d , wt: %d", gridCoordinate.x, gridCoordinate.y, direction.x, direction.y,grid[gridCoordinate.y][gridCoordinate.x],  grid[gridCoordinate.y+direction.y][gridCoordinate.x+direction.x]);
 
-            std::cout << "ix: " << ix << " iy: " << iy << " tile: " << tile << " \n";
-
-            return (tile != ost::WALL);
+            auto wantTile = grid[gridCoordinate.y+direction.y][gridCoordinate.x+direction.x];
+            return wantTile != ost::WALL;
         }
     };
 

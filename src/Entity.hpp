@@ -95,14 +95,14 @@ struct Pacman {
     }
 
     void move(const float dt) {
-
+        level.isWalkable(pos, size, direction);
+        pos += glm::vec2{direction} * dt * speed;
     }
 
 
 
     void towards(const glm::ivec2 _wantedDirection, Level& level) {
-
-
+        direction = _wantedDirection;
     }
 
     void animate(const float dt) {
