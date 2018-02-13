@@ -9,6 +9,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "GL/glew.h"
+#include "logger.h"
 
 namespace ost 
 {
@@ -46,17 +47,13 @@ struct Shader
 inline void
 _bindVertexArrayAttributes(Shader& shader) {
     shader.positionAttribute = glGetAttribLocation(shader.program, "position");
-    if (shader.positionAttribute == -1) {
-        PANIC("shader.positionAttribute == -1");
-    }
+    LOG_DEBUG("shader.positionAttribute = %d, shader.program = %d", shader.positionAttribute, shader.program);
+    
     shader.colorAttribute = glGetAttribLocation(shader.program, "color");
-    if (shader.colorAttribute == -1) {
-        PANIC("shader.colorAttribute == -1");
-    }
+    LOG_DEBUG("shader.colorAttribute    = %d, shader.program = %d", shader.colorAttribute, shader.program);        
+
     shader.texcoordAttribute = glGetAttribLocation(shader.program, "texcoord");
-    if (shader.texcoordAttribute == -1) {
-        PANIC("shader.texcoordAttribute == -1");
-    }
+    LOG_DEBUG("shader.texcoordAttribute = %d, shader.program = %d", shader.texcoordAttribute, shader.program);                
 
     glVertexAttribPointer(shader.positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glVertexAttribPointer(shader.colorAttribute,    4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec2));
