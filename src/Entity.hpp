@@ -24,7 +24,7 @@ void bufferBindRect(const std::vector<ost::Vertex>::iterator vertIt,
    
     vertIt[1].position = pos + glm::vec2{ size.x, 0.0f};
     vertIt[2].position = pos + glm::vec2{ size.x, -size.y };
-    vertIt[3].position = pos + glm::vec2{ 0.0f, -size.y };
+    vertIt[3].position = pos + glm::vec2{ 0.0f,   -size.y };
     
     vertIt[0].texCoord = uv.topleft;
     vertIt[1].texCoord = uv.topright;
@@ -95,32 +95,18 @@ struct Pacman {
     }
 
     void move(const float dt) {
-        static float rail = 0.0f;
-        rail += dt*speed;
 
-        if (rail >= 1.0f) {
-            if (level.isWalkable(pos, wantedDirection)) {
-                direction = wantedDirection;
-                rail = 0.0f;
-            }
-        } else {
-            pos += glm::vec2{ direction.x , direction.y} * dt * speed;
-        }
     }
 
 
 
     void towards(const glm::ivec2 _wantedDirection, Level& level) {
 
-        if (_wantedDirection != direction) {
-            if (level.isWalkable(pos, _wantedDirection)) {
-                wantedDirection = _wantedDirection;        
-            }
-        }
+
     }
 
     void animate(const float dt) {
-        const float frameTimeLimit = .05f;
+        const float frameTimeLimit = .017f*4;
         static float deltaFrameTime = 0.0f;
 
         deltaFrameTime += dt;

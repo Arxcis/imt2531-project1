@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "glm/glm.hpp"
 #include "./Shader.hpp"
-
+#include "./logger.h"
 namespace ost
 {
     enum TileTypes : int {
@@ -30,7 +30,7 @@ namespace ost
         size(_size),
         grid(_grid),
         biggestSize((_size.x > _size.y) ? _size.x : _size.y),
-        levelUnit(2.0f/biggestSize),
+        levelUnit(2.0f/(biggestSize)),
         viewMatrix(
             mat4(levelUnit, 0,              0,      0,
                 0,          levelUnit,      0,      0,
@@ -41,7 +41,8 @@ namespace ost
         {
             printf("LEVEL DEBUG INFO:\n");
             printf("size: (x:%d,y:%d)\n", size.x, size.y);
-            printf("biggestSize: %d\n", biggestSize);
+
+            LOG_DEBUG("biggestSize: %d\n", biggestSize);
             printf("levelUnit: %.4f\n", levelUnit);
             printf("viewMatrix: \n%.4f,%.4f,%.4f,%.4f\n%.4f,%.4f,%.4f,%.4f\n%.4f,%.4f,%.4f,%.4f\n%.4f,%.4f,%.4f,%.4f\n",
                 viewMatrix[0][0],viewMatrix[0][1],viewMatrix[0][2],viewMatrix[0][3],

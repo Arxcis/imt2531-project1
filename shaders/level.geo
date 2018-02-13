@@ -21,22 +21,27 @@ uniform float quadSize = .1;
     |     \ |
     0-------1
 
+    Version 3.0
+
+    0-------2
+    |     / |
+    |   /   |
+    | /     |
+    1-------3
+
 */
 void main()
 {
-    float q = quadSize*0.5;
-
-    gl_Position = gl_in[0].gl_Position - vec4(q,q,0,0);
+    gl_Position = gl_in[0].gl_Position;
     EmitVertex();
 
-    gl_Position = gl_in[0].gl_Position + vec4(q, -q, 0.0, 0.0);
+    gl_Position = gl_in[0].gl_Position + vec4(0.0, -quadSize, 0.0, 0.0);
     EmitVertex();
 
-
-    gl_Position = gl_in[0].gl_Position + vec4(-q, q, 0.0, 0.0);
+    gl_Position = gl_in[0].gl_Position + vec4(quadSize, 0.0, 0.0, 0.0);
     EmitVertex();
 
-    gl_Position = gl_in[0].gl_Position + vec4(q, q, 0.0, 0.0);
+    gl_Position = gl_in[0].gl_Position + vec4(quadSize, -quadSize, 0.0, 0.0);
     EmitVertex();
 
     EndPrimitive();

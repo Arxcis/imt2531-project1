@@ -21,6 +21,7 @@
 #include "./Shader.hpp"
 #include "./Entity.hpp"
 #include "./spritesheet.hpp"
+#include "./logger.h"
 
 
 //DISCUSSION: using Color = float[4]; instead?
@@ -63,28 +64,32 @@ int main(int argc, char* argv[]) {
     const GLuint spriteShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/sprite.frag");
     const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/cheese.frag");
 
-    // LEVEL SHADER
-    printf("LEVEL\n");
+    LOG_DEBUG("INIT LEVEL SHADER\n");
     ost::Shader levelShader = ost::makeShader_VBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
     level.bindBufferVertices( getVertexBufferIt(levelShader, level.vertices.size()) );
     ost::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
     ost::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
 
-printf("SPRITE\n");
+    ost::setUniformMat4(levelShader, "scale", level.viewMatrix);
 
-     // SPRITE SHADER
+
+
+    LOG_DEBUG("INIT SPRITE SHADER\n");
     ost::Shader spriteShader = ost::makeShader_VBO_EBO(spriteShaderProgram, 24, 36, GL_STREAM_DRAW, GL_TRIANGLES);
     ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {0.0f, 16.0f}, level};
    // ost::Ghost ghost1        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   4, {-9.0f, 1.5f}};
    // ost::Ghost ghost2        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   8, {-5.0f, 1.5f}};
+    ost::setUniformMat4(spriteShader, "scale", level.viewMatrix);
 
-  printf("cheese\n");
-    // CHEESE SHADER
+
+
+    LOG_DEBUG("INIT CHEESE SHADER\n");
     ost::Shader cheeseShader = ost::makeShader_VBO(cheeseShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
     for (auto v : level.vertices) {
         ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v};
     }
     ost::setUniformFloat(cheeseShader, "pointSize", 5.0f);
+    ost::setUniformMat4(cheeseShader, "scale", level.viewMatrix);
 
 
     //
