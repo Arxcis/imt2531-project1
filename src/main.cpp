@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     LOG_DEBUG("INIT CHEESE SHADER\n");
     ost::Shader cheeseShader = ost::makeShader_VBO(cheeseShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
     for (auto v : level.vertices) {
-        ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v};
+        ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v + glm::vec2(0.5f,-0.5f)};
     }
     ost::setUniformFloat(cheeseShader, "pointSize", 5.0f);
     ost::setUniformMat4(cheeseShader, "scale", level.viewMatrix);
