@@ -9,19 +9,18 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "GL/glew.h"
-#include "logger.h"
 
-namespace ost 
+namespace ost
 {
 
-struct Vertex 
+struct Vertex
 {
     glm::vec2 position{};
     glm::vec4 color{};
     glm::vec2 texCoord{};
 };
 
-struct Shader 
+struct Shader
 {
     GLuint vao;
     GLuint vbo;
@@ -47,13 +46,22 @@ struct Shader
 inline void
 _bindVertexArrayAttributes(Shader& shader) {
     shader.positionAttribute = glGetAttribLocation(shader.program, "position");
-    LOG_DEBUG("shader.positionAttribute = %d, shader.program = %d", shader.positionAttribute, shader.program);
-    
-    shader.colorAttribute = glGetAttribLocation(shader.program, "color");
-    LOG_DEBUG("shader.colorAttribute    = %d, shader.program = %d", shader.colorAttribute, shader.program);        
+    if (shader.positionAttribute == -1) {
+        PANIC("shader.positionAttribute == -1");
+    }
 
+    printf("%lu\n", shader.positionAttribute);
+    shader.colorAttribute = glGetAttribLocation(shader.program, "color");
+
+        printf("%lu\n", glGetAttribLocation(shader.program, "color"));
+    if (shader.colorAttribute == -1) {
+        printf("%d\n", shader.program);
+        // PANIC("shader.colorAttribute == -1");
+    }
     shader.texcoordAttribute = glGetAttribLocation(shader.program, "texcoord");
-    LOG_DEBUG("shader.texcoordAttribute = %d, shader.program = %d", shader.texcoordAttribute, shader.program);                
+    if (shader.texcoordAttribute == -1) {
+        // PANIC("shader.texcoordAttribute == -1");
+    }
 
     glVertexAttribPointer(shader.positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glVertexAttribPointer(shader.colorAttribute,    4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec2));
@@ -62,22 +70,22 @@ _bindVertexArrayAttributes(Shader& shader) {
     glEnableVertexAttribArray(shader.positionAttribute);
     glEnableVertexAttribArray(shader.colorAttribute);
     glEnableVertexAttribArray(shader.texcoordAttribute);
-} 
+}
 
 //
 // @function makeShader_VBO
 //
-inline Shader 
-makeShader_VBO(const GLuint program, 
-               const GLuint maxVertexCount, 
+inline Shader
+makeShader_VBO(const GLuint program,
+               const GLuint maxVertexCount,
                const GLenum updateMode, // GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
                const GLenum drawMode    // GL_POINTS, GL_TRIANGLES
-               ) 
+               )
 {
     Shader shader = Shader{};
     shader.program = program;
     glUseProgram(shader.program);
-    
+
     glGenVertexArrays(1, &(shader.vao));
     glGenBuffers(1, &(shader.vbo));
 
@@ -102,19 +110,19 @@ makeShader_VBO(const GLuint program,
 //
 // @function makeShader_VBO_EBO
 //
-inline Shader 
-makeShader_VBO_EBO(const GLuint program, 
-                   const GLuint maxVertexCount, 
+inline Shader
+makeShader_VBO_EBO(const GLuint program,
+                   const GLuint maxVertexCount,
                    const GLuint maxElementCount,
                    const GLenum updateMode, // GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
                    const GLenum drawMode    // GL_POINTS, GL_TRIANGLES
-           ) 
+           )
 {
-    
+
     Shader shader = Shader{};
     shader.program = program;
     glUseProgram(shader.program);
-    
+
     glGenVertexArrays(1, &(shader.vao));
     glGenBuffers(1, &(shader.vbo));
     glGenBuffers(1, &(shader.ebo));
@@ -129,7 +137,7 @@ makeShader_VBO_EBO(const GLuint program,
 
     glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
     glBufferData(GL_ARRAY_BUFFER, shader.maxVertexCount * sizeof(Vertex), shader.vertexBuffer.data(), shader.updateMode);
-    
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, shader.maxElementCount * sizeof(int), shader.elementBuffer.data(), shader.updateMode);
 
@@ -145,15 +153,15 @@ makeShader_VBO_EBO(const GLuint program,
 //
 // @function draw_VBO
 //
-inline void 
-draw_VBO(const Shader& shader) 
+inline void
+draw_VBO(const Shader& shader)
 {
-    glUseProgram(shader.program);   
+    glUseProgram(shader.program);
     glBindVertexArray(shader.vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, shader.vertexBuffer.size()*sizeof(Vertex), shader.vertexBuffer.data());
-   
+
     glDrawArrays(shader.drawMode, 0, shader.vertexBuffer.size());
 
     glBindVertexArray(0);
@@ -163,15 +171,15 @@ draw_VBO(const Shader& shader)
 //
 // @function draw_VBO_EBO
 //
-inline void 
-draw_VBO_EBO(const Shader& shader) 
+inline void
+draw_VBO_EBO(const Shader& shader)
 {
-    glUseProgram(shader.program);   
+    glUseProgram(shader.program);
     glBindVertexArray(shader.vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, shader.vertexBuffer.size()*sizeof(Vertex), shader.vertexBuffer.data());
-   
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
 
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, shader.elementBuffer.size()*sizeof(int), shader.elementBuffer.data());
@@ -200,7 +208,7 @@ getVertexBufferIt(Shader& shader, const size_t vertexCount)
 // @function getElementBufferIt
 //
 inline const std::vector<int>::iterator
-getElementBufferIt(Shader& shader, const size_t elementCount) 
+getElementBufferIt(Shader& shader, const size_t elementCount)
 {
     if (elementCount + shader.elementBuffer.size() > shader.maxElementCount ) {
         PANIC("PREVENTED ELEMENT BUFFER OVERFLOW");
@@ -215,8 +223,8 @@ getElementBufferIt(Shader& shader, const size_t elementCount)
 //
 // @function setUniformFloat
 //
-inline void 
-setUniformFloat(const Shader& shader, const std::string uniname, const float univalue) 
+inline void
+setUniformFloat(const Shader& shader, const std::string uniname, const float univalue)
 {
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
@@ -230,8 +238,8 @@ setUniformFloat(const Shader& shader, const std::string uniname, const float uni
 //
 // @function setUniformVec4
 //
-inline void 
-setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 univalue) 
+inline void
+setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 univalue)
 {
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
@@ -239,7 +247,7 @@ setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 
         PANIC("UNIFORM == -1");
     }
     glUniform4fv(uniform, 1, glm::value_ptr(univalue));
-    glUseProgram(0);    
+    glUseProgram(0);
 }
 
 inline void
@@ -251,7 +259,7 @@ setUniformMat4(const Shader& shader, const std::string uniname, const glm::mat4 
         PANIC("UNIFORM == -1");
     }
     glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(univalue));
-    glUseProgram(0);    
+    glUseProgram(0);
 }
 
 } // END NAMESPACE OST

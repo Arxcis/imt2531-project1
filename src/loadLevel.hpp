@@ -49,7 +49,7 @@ Level loadLevel(const char* level_path)
                     PANIC("X out of range while reading level level read");
                 } // failed to read, must be end of line
 
-                if(n % 2 == 0) { buffer.push_back(glm::vec2(x-(levelWidth-1)*0.5f, (levelSize-y)-levelHeight*0.5f) ); } // FILL THE BUFFER WITH Vectors - vertex candidate
+                if(n % 2 == 0) { buffer.push_back(glm::vec2(x, levelSize-y) ); } // FILL THE BUFFER WITH Vectors - vertex candidate
 
                 grid[y].push_back(n);
             }
