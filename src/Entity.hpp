@@ -3,142 +3,144 @@
 #include <cmath>
 #include "glm/glm.hpp"
 #include "./spritesheet.hpp"
+#include "./Shader.hpp"
+#include "./Level.hpp"
 
 namespace ost {
 
-enum PacmanFrame : int {
-    PACMAN_DOWN0,  PACMAN_DOWN1, PACMAN_DOWN2, PACMAN_DOWN3,
-    PACMAN_UP0,    PACMAN_UP1,  PACMAN_UP2, PACMAN_UP3,
-    PACMAN_LEFT0,  PACMAN_LEFT1, PACMAN_LEFT2, PACMAN_LEFT3,
-    PACMAN_RIGHT0, PACMAN_RIGHT1, PACMAN_RIGHT2, PACMAN_RIGHT3,
-};
+const auto vecUp    = glm::ivec2(0, 1);
+const auto vecDown  = glm::ivec2(0, -1);
+const auto vecRight = glm::ivec2(1, 0);
+const auto vecLeft  = glm::ivec2(-1,0);
 
-enum GhostFrame : int {
-    GHOST_DOWN0,  GHOST_DOWN1,
-    GHOST_UP0,    GHOST_UP1,
-    GHOST_LEFT0,  GHOST_LEFT1,
-    GHOST_RIGHT0, GHOST_RIGHT1,
-};
+void bufferBindRect(const std::vector<ost::Vertex>::iterator vertIt, 
+                    const std::vector<int>::iterator eleIt,
+                    const int elementOffset,
+                    const glm::vec2 pos,
+                    const glm::vec2 size,
+                    const ost::Rect uv) 
+{
+    vertIt[0].position = pos;
+   
+    vertIt[1].position = pos + glm::vec2{ size.x, 0.0f};
+    vertIt[2].position = pos + glm::vec2{ size.x, -size.y };
+    vertIt[3].position = pos + glm::vec2{ 0.0f, -size.y };
+    
+    vertIt[0].texCoord = uv.topleft;
+    vertIt[1].texCoord = uv.topright;
+    vertIt[2].texCoord = uv.botright;    
+    vertIt[3].texCoord = uv.botleft;
 
-struct Entity {
-    Entity(const std::vector<ost::Rect> _uv)
-    :uv(_uv)
-    {}
-    //
-    // BUFFER COMPONENT
-    //
-    const std::vector<ost::Rect> uv;
-    glm::vec2 pos  = {-.9f, .1f};
-    glm::vec2 size = { 1.0f, 1.0f };
-    int animationFrame = PACMAN_RIGHT0;
+    eleIt[0] = elementOffset+0;   
+    eleIt[1] = elementOffset+1;
+    eleIt[2] = elementOffset+2;
+    eleIt[3] = elementOffset+2;
+    eleIt[4] = elementOffset+3;
+    eleIt[5] = elementOffset+0;
+}
 
-    std::vector<float> getBuffer() const {
-        ost::Rect _uv = uv[animationFrame];
-        return {
-            pos.x,         pos.y,        _uv.topleft.x,  _uv.topleft.y,
-            pos.x+size.x,  pos.y,        _uv.topright.x, _uv.topright.y,
-            pos.x+size.x,  pos.y-size.y, _uv.botright.x, _uv.botright.y,
-            pos.x,         pos.y-size.y, _uv.botleft.x,  _uv.botleft.y
-        };
-    }
 
-    enum Direction : int {
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT,
+void bufferUpdateRect(const std::vector<ost::Vertex>::iterator vertIt,
+                      const glm::vec2 pos,
+                      const glm::vec2 size,
+                      const ost::Rect uv) 
+{
+    vertIt[0].position = pos;
+    vertIt[1].position = pos + glm::vec2{ size.x, 0.0f};
+    vertIt[2].position = pos + glm::vec2{ size.x, -size.y };
+    vertIt[3].position = pos + glm::vec2{ 0.0f, -size.y };
+    
+    vertIt[0].texCoord = uv.topleft;
+    vertIt[1].texCoord = uv.topright;
+    vertIt[2].texCoord = uv.botright;    
+    vertIt[3].texCoord = uv.botleft;
+}
+
+struct Pacman {
+
+    enum PacmanFrame : int {
+        PACMAN_DOWN0,  PACMAN_DOWN1, PACMAN_DOWN2, PACMAN_DOWN3,
+        PACMAN_UP0,    PACMAN_UP1,  PACMAN_UP2, PACMAN_UP3,
+        PACMAN_LEFT0,  PACMAN_LEFT1, PACMAN_LEFT2, PACMAN_LEFT3,
+        PACMAN_RIGHT0, PACMAN_RIGHT1, PACMAN_RIGHT2, PACMAN_RIGHT3,
     };
+    
+    const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
+    const glm::vec2             size = { 1.0f, 1.0f };
+    const float                 speed = 2.0f;
+    const std::vector<ost::Vertex>::iterator vertexBufferIt;
+    const std::vector<int>::iterator         elementBufferIt;
+    const ost::Level&            level;
+    const int bufferOffset;
+    
+    glm::vec2                    pos;
+    int                          animationFrame = PACMAN_RIGHT3;
+    glm::ivec2                   direction       = { 1, 0 };
+    glm::ivec2                   wantedDirection = {1, 0};
+  
+    Pacman(const std::vector<ost::Vertex>::iterator _vertexBuffer,
+           const std::vector<int>::iterator         _elementBuffer,
+           const int _bufferOffset,
+           const glm::vec2 _pos,
+           const ost::Level& _level
+           ) 
 
-    //
-    // GAME COMPONENT
-    //
-    glm::vec2 velocity = { 2.0f, 0.0f};
-    Direction direction = RIGHT;
+    :vertexBufferIt(_vertexBuffer)
+    ,elementBufferIt(_elementBuffer)
+    ,bufferOffset(_bufferOffset)
+    ,pos(_pos)
+    ,level(_level)
+    {
+        bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
+    }
 
     void move(const float dt) {
-        pos += glm::vec2{ velocity.x*dt, velocity.y*dt};
-    }
+
+       // auto tilePosition = level.vertices[(int(pos.x)+level.size.x) + (int(pos.y))];
+        static glm::vec2 rail = {1.0f, 0.0f};
+        
+        auto ix = int(pos.x+(level.size.x/2));
+        auto iy = level.size.y - int(pos.y+level.size.y/2);
+        int nextTileValue = level.grid[iy-direction.y][ix+direction.x];
+        
+        // If pacman crosses the middle of a tile
+        if (rail.x < 0.00001f && rail.y < 0.00001f) {
+            direction = wantedDirection;
+            rail = direction;
 
 
-    void towards(const Direction _direction) {
-
-        if (_direction == UP && direction != UP) {
-            velocity.y = std::abs(velocity.x) + std::abs(velocity.y);
-            velocity.x = 0.0f;
-            direction = UP;
-        } else if (_direction == DOWN && direction != DOWN) {
-            velocity.y = - (std::abs(velocity.x) + std::abs(velocity.y));
-            velocity.x = 0.0f;
-            direction = DOWN;
-        } else if (_direction == LEFT && direction != LEFT) {
-            velocity.x = - (std::abs(velocity.x) + std::abs(velocity.y));
-            velocity.y = 0.0f;
-            direction = LEFT;
-        } else if (_direction == RIGHT && direction != RIGHT) {
-            velocity.x = (std::abs(velocity.x) + std::abs(velocity.y));
-            velocity.y = 0.0f;
-            direction = RIGHT;
+            // If the next tile forward is still not a wall, keep moving
+            if (nextTileValue != ost::WALL) {
+                rail = glm::vec2{direction.x, direction.y}; 
+            }
+    /*        std::cout << nextTileValue << " | "
+                      << pos.x << " " << pos.y << " | "
+                      << ix    << " " << iy    << '\n'; */
+        } else {
+            auto step = glm::vec2{direction.x * dt * speed, direction.y * dt * speed};
+            if (nextTileValue != ost::WALL) {
+                rail -= step;      
+                pos += step;
+            }        
         }
-
-        //std::cout << "Direction: " << direction << " velocity: " << velocity.x << ", " << velocity.y << '\n'; //@debug
-     }
-    virtual void animate(const float dt) {};
-};
-
-struct Pacman : public Entity {
-
-    Pacman() : Entity(ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},
-                                                       {278.0f, 278.0f},
-                                                       {439.0f, 289.0f}))
-    {
-        animationFrame = PACMAN_RIGHT0;
     }
 
-    void animate(const float dt) override {
-        const float frameTimeLimit = .1f;
-        static float deltaFrameTime = 0.0f;
 
-        deltaFrameTime += dt;
 
-        if (deltaFrameTime > frameTimeLimit) {
-            deltaFrameTime = 0.0f;
+    void towards(const glm::ivec2 _wantedDirection, const Level& level) {
 
-            const int framesPerDirection = 4;
-            int offset = (animationFrame+1) % framesPerDirection;
-            offset = (framesPerDirection-1) - offset;   // Reverse animation
-            switch(direction) {
-                case UP: {
-                    animationFrame = PACMAN_UP0 + offset;
-                    break;
-                }
-                case DOWN: {
-                    animationFrame = PACMAN_DOWN0 + offset;
-                    break;
-                }
-                case LEFT: {
-                    animationFrame = PACMAN_LEFT0 + offset;
-                    break;
-                }
-                case RIGHT: {
-                    //std::cout << "RIGHT! dir:" << direction << " frame: " << animationFrame << " offset: " << offset <<'\n'; // @debug
-                    animationFrame = PACMAN_RIGHT0 + offset;
-                    break;
-                }
+        if (_wantedDirection != direction) {
+            auto ix = int(pos.x)+(level.size.x/2)-1;
+            auto iy = level.size.y - (int(pos.y)+(level.size.y/2));     
+            auto wantedTileValue = level.grid[iy-_wantedDirection.y][ix+_wantedDirection.x];
+
+            if (wantedTileValue != ost::WALL) {
+                wantedDirection = _wantedDirection;        
             }
         }
     }
-};
 
-struct Ghost : public Entity {
-
-    Ghost() : Entity(ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},
-                                                       {144.0f, 278.0f},
-                                                       {439.0f, 289.0f}))
-    {
-        animationFrame = GHOST_DOWN0;
-    }
-
-    void animate(const float dt) override {
+    void animate(const float dt) {
         const float frameTimeLimit = .05f;
         static float deltaFrameTime = 0.0f;
 
@@ -147,50 +149,108 @@ struct Ghost : public Entity {
         if (deltaFrameTime > frameTimeLimit) {
             deltaFrameTime = 0.0f;
 
-            const int framesPerDirection = 2;
-            const int offset = ((animationFrame+1)%framesPerDirection);
-
-            switch(direction) {
-                case UP: {
-                    animationFrame = GHOST_UP0 + offset;
-                    break;
-                }
-                case DOWN: {
-                    animationFrame = GHOST_DOWN0 + offset;
-                    break;
-                }
-                case LEFT: {
-                    animationFrame = GHOST_LEFT0 + offset;
-                    break;
-                }
-                case RIGHT: {
-                    animationFrame = GHOST_RIGHT0 + offset;
-                }
+            const int framesPerDirection = 4;
+            int offset = 0;
+            offset = animationFrame % framesPerDirection;
+            
+            if (offset == 0) {
+                offset = 3;
+            } else {
+                offset -= 1;
             }
+
+            if(direction == ost::vecUp) {
+                    animationFrame = PACMAN_UP0 + offset;
+            }
+            else if(direction == ost::vecDown) {
+                    animationFrame = PACMAN_DOWN0 + offset;
+            }
+            else if (direction == ost::vecLeft) {
+                    animationFrame = PACMAN_LEFT0 + offset;
+            }
+            else if (direction == ost::vecRight){
+                    animationFrame = PACMAN_RIGHT0 + offset;
+            }
+            bufferUpdateRect(vertexBufferIt, pos, size, uv[animationFrame]);
+        }
+    }
+};
+
+struct Ghost {
+    enum GhostFrame : int {
+        GHOST_DOWN0,  GHOST_DOWN1,
+        GHOST_UP0,    GHOST_UP1,
+        GHOST_LEFT0,  GHOST_LEFT1,
+        GHOST_RIGHT0, GHOST_RIGHT1,
+    };
+
+    const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f});
+    const glm::vec2              size = { 1.0f, 1.0f };
+    const std::vector<ost::Vertex>::iterator vertexBufferIt;
+    const std::vector<int>::iterator         elementBufferIt;
+    const int bufferOffset;
+
+    glm::vec2                    pos;
+    int                          animationFrame = GHOST_DOWN0;
+    glm::ivec2                   direction      = { 1, 0};
+
+
+    Ghost(const std::vector<ost::Vertex>::iterator _vertexBuffer,
+          const std::vector<int>::iterator         _elementBuffer,
+          const int _bufferOffset,
+          const glm::vec2 _pos
+          ) 
+
+    :vertexBufferIt(_vertexBuffer)
+    ,elementBufferIt(_elementBuffer)
+    ,bufferOffset(_bufferOffset)
+    ,pos(_pos)
+    {
+        bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
+    }
+
+    void animate(const float dt) {
+        const float frameTimeLimit = .05f;
+        static float deltaFrameTime = 0.0f;
+
+        deltaFrameTime += dt;
+
+        if (deltaFrameTime > frameTimeLimit) {
+            deltaFrameTime = 0.0f;
+            const int offset = (animationFrame%2 == 1)?0:1;
+
+            if(direction == ost::vecUp) {
+                    animationFrame = GHOST_UP0 + offset;
+            }
+            else if(direction == ost::vecDown) {
+                    animationFrame = GHOST_DOWN0 + offset;
+            }
+            else if (direction == ost::vecLeft) {
+                    animationFrame = GHOST_LEFT0 + offset;
+            }
+            else if (direction == ost::vecRight){
+                    animationFrame = GHOST_RIGHT0 + offset;
+            }
+            bufferUpdateRect(vertexBufferIt, pos, size, uv[animationFrame]);            
         }
     }
 
 };
 
 
-struct Dot : public Entity {
+struct Cheese {
 
-    Dot(glm::vec2 _position): Entity(
-        ost::makeSpriteUVCoordinates(1,1,1,{219.0f, 9.0f},
-                                           {61.0f, 61.0f},
-                                           {439.0f, 289.0f}))
+    const std::vector<ost::Vertex>::iterator vertexBufferIt;
+    glm::vec2 pos;
+
+    Cheese(const std::vector<ost::Vertex>::iterator _vertexBuffer,
+           const glm::vec2 _pos
+          ) 
+    :vertexBufferIt(_vertexBuffer)
+    ,pos(_pos)
     {
-        pos = _position;
+        vertexBufferIt->position = pos;
     }
-    bool active = true;
 };
 
-std::vector<ost::Dot> makeDots(const std::vector<glm::vec2> levelVertices) {
-
-    std::vector<ost::Dot> dotvector{};
-    for (const auto& v : levelVertices) {
-        dotvector.push_back(ost::Dot{ v });
-    }
-    return dotvector;
-}
-}
+} // END NAMESPACE OST

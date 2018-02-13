@@ -13,6 +13,7 @@ namespace ost {
 Level loadLevel(const char* level_path)
 {
     std::vector<glm::vec2> buffer;
+    std::vector<std::vector<int>> grid;
         std::ifstream in;
         in.open(level_path, std::ios::binary);
 
@@ -38,6 +39,8 @@ Level loadLevel(const char* level_path)
             std::getline(in, line);
             std::stringstream ss(line);
 
+            grid.push_back(std::vector<int>{});
+
             for(float x=0;x < levelWidth;x++) {
                 int n;
                 if(!(ss >> n)) {
@@ -45,10 +48,12 @@ Level loadLevel(const char* level_path)
                 } // failed to read, must be end of line
 
                 if(n % 2 == 0) { buffer.push_back(glm::vec2(x-(levelWidth-1)*0.5f, (levelSize-y)-levelHeight*0.5f) ); } // FILL THE BUFFER WITH Vectors - vertex candidate
+
+                grid[y].push_back(n);
             }
         }
 
-    Level lvl(buffer, glm::vec2(levelWidth,levelHeight));
+    Level lvl(buffer, glm::vec2(levelWidth,levelHeight), grid);
 
     //TODO return levelSize to be able to set the uniform view matrix
     return lvl;

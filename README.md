@@ -26,6 +26,7 @@ optional arguments:
 
 
 ## 2. References
+loadShader files - https://badvertex.com/2012/11/20/how-to-load-a-glsl-shader-in-opengl-using-c.html  - 12.02.18
 glPoints - https://solarianprogrammer.com/2013/05/13/opengl-101-drawing-primitives/ - 12.02.18
 glBufferSubData - https://www.khronos.org/opengl/wiki/Buffer_Object#Data_Specification - 04.02.18 <br>
 Texture/texture-blending tutorial - https://learnopengl.com/Getting-started/Textures 04.02.18 <br>
