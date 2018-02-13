@@ -71,7 +71,7 @@ struct Pacman {
         PACMAN_RIGHT0, PACMAN_RIGHT1, PACMAN_RIGHT2, PACMAN_RIGHT3,
     };
     
-    const std::vector<ost::Rect> uv;
+    const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
     const glm::vec2             size = { 1.0f, 1.0f };
     const std::vector<ost::Vertex>::iterator vertexBufferIt;
     const std::vector<int>::iterator         elementBufferIt;
@@ -79,7 +79,7 @@ struct Pacman {
     
 
     glm::vec2                    pos;
-    int                          animationFrame;
+    int                          animationFrame = PACMAN_RIGHT3;
     glm::vec2                    velocity       = { 2.0f, 0.0f};
     Direction                    direction      = RIGHT;
   
@@ -93,8 +93,6 @@ struct Pacman {
     ,elementBufferIt(_elementBuffer)
     ,bufferOffset(_bufferOffset)
     ,pos(_pos)
-    ,uv(ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f}))
-    ,animationFrame(PACMAN_RIGHT3)
     {
         bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
     }
@@ -157,14 +155,14 @@ struct Ghost {
         GHOST_RIGHT0, GHOST_RIGHT1,
     };
 
-    const std::vector<ost::Rect> uv;
+    const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f});
     const glm::vec2              size = { 1.0f, 1.0f };
     const std::vector<ost::Vertex>::iterator vertexBufferIt;
     const std::vector<int>::iterator         elementBufferIt;
     const int bufferOffset;
 
     glm::vec2                    pos;
-    int                          animationFrame = 0;
+    int                          animationFrame = GHOST_DOWN0;
     glm::vec2                    velocity       = { 0.0f, 0.0f};
     Direction                    direction      = RIGHT;
 
@@ -177,9 +175,7 @@ struct Ghost {
     :vertexBufferIt(_vertexBuffer)
     ,elementBufferIt(_elementBuffer)
     ,bufferOffset(_bufferOffset)
-    ,uv(ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f}))
     ,pos(_pos)
-    ,animationFrame(GHOST_DOWN0)
     {
         bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
     }

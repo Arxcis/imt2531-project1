@@ -46,8 +46,17 @@ struct Shader
 inline void
 _bindVertexArrayAttributes(Shader& shader) {
     shader.positionAttribute = glGetAttribLocation(shader.program, "position");
-    shader.colorAttribute    = glGetAttribLocation(shader.program, "color");
+    if (shader.positionAttribute == -1) {
+        PANIC("shader.positionAttribute == -1");
+    }
+    shader.colorAttribute = glGetAttribLocation(shader.program, "color");
+    if (shader.colorAttribute == -1) {
+        PANIC("shader.colorAttribute == -1");
+    }
     shader.texcoordAttribute = glGetAttribLocation(shader.program, "texcoord");
+    if (shader.texcoordAttribute == -1) {
+        PANIC("shader.texcoordAttribute == -1");
+    }
 
     glVertexAttribPointer(shader.positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     glVertexAttribPointer(shader.colorAttribute,    4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec2));
