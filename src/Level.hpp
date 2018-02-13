@@ -42,24 +42,13 @@ namespace ost
         ),
         moveMatrix(
             mat4(
-                1,        0,        0,      0,
-                0,        1,        0,      0,
-                0,        0,        1,      0,
-                -_size.x, -_size.y, 0,      1
+                1,             0,           0,      0,
+                0,             1,           0,      0,
+                0,             0,           1,      0,
+                -_size.x*0.5, -_size.y*0.5, 0,      1
             )
-        ),
+        )
         {
-            printf("LEVEL DEBUG INFO:\n");
-            printf("size: (x:%d,y:%d)\n", size.x, size.y);
-
-            LOG_DEBUG("biggestSize: %d\n", biggestSize);
-            printf("levelUnit: %.4f\n", levelUnit);
-            printf("viewMatrix: \n%.4f,%.4f,%.4f,%.4f\n%.4f,%.4f,%.4f,%.4f\n%.4f,%.4f,%.4f,%.4f\n%.4f,%.4f,%.4f,%.4f\n",
-                viewMatrix[0][0],viewMatrix[0][1],viewMatrix[0][2],viewMatrix[0][3],
-                viewMatrix[1][0],viewMatrix[1][1],viewMatrix[1][2],viewMatrix[1][3],
-                viewMatrix[2][0],viewMatrix[2][1],viewMatrix[2][2],viewMatrix[2][3],
-                viewMatrix[3][0],viewMatrix[3][1],viewMatrix[3][2],viewMatrix[3][3]
-            );
         }
         //
         // BUFFER COMPONENT
