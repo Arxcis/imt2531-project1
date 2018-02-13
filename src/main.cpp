@@ -31,7 +31,7 @@ struct Color {
 namespace ost {
 namespace color {
 const Color BACKGROUND = {.3f, .9f, .3f, 1.0f};
-const Color FLOOR  = {1.0f, .9f, .8f, 1.0f};
+const Color FLOOR  = {1.0f, .7f, .8f, 1.0f};
 const Color SCORE  = {.3f, .9f, .3f, 1.0f};
 const Color CHEESE = {.3f, .9f, .3f, 1.0f};
 }
@@ -51,11 +51,11 @@ int main(int argc, char* argv[]) {
     const int  WIN_HEIGHT  = 500;
 
     auto window = init_GLFW_GLEW(OPENGL_MAJOR, OPENGL_MINOR, WIN_WIDTH, WIN_HEIGHT, WIN_NAME);
-    
+
     using namespace ost::color;
-    glEnable(GL_PROGRAM_POINT_SIZE);    
+    glEnable(GL_PROGRAM_POINT_SIZE);
     glClearColor(BACKGROUND.r,BACKGROUND.g,BACKGROUND.b,BACKGROUND.a);
-    
+
     // LOAD FILES
     ost::Level level                 = ost::loadLevel("./levels/level0");
     const GLuint levelShaderProgram  = ost::loadShaderProgram("./shaders/general.vert", "./shaders/level.geo","./shaders/level.frag");
@@ -64,9 +64,9 @@ int main(int argc, char* argv[]) {
     const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/cheese.frag");
 
     // LEVEL SHADER
-    ost::Shader levelShader = ost::makeShader_VBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS); 
-    level.bindBufferVertices( getVertexBufferIt(levelShader, level.vertices.size()) );      
-    ost::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);        
+    ost::Shader levelShader = ost::makeShader_VBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
+    level.bindBufferVertices( getVertexBufferIt(levelShader, level.vertices.size()) );
+    ost::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
     ost::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
 
    
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
     for (auto v : level.vertices) {
         ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v};
     }
-    ost::setUniformFloat(cheeseShader, "pointSize", 15.0f);
+    ost::setUniformFloat(cheeseShader, "pointSize", 5.0f);
 
 
     //
@@ -184,13 +184,13 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level) {
 }
 
 
-inline void render(GLFWwindow* window, 
-                const   ost::Shader& levelShader, 
+inline void render(GLFWwindow* window,
+                const   ost::Shader& levelShader,
                 const   ost::Shader& spriteShader,
                 const   ost::Shader& cheeseShader) {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
     draw_VBO(levelShader);
     draw_VBO(cheeseShader);
     draw_VBO_EBO(spriteShader);
