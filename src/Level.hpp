@@ -6,11 +6,20 @@
 
 namespace ost
 {
+    enum TileTypes : int {
+        FLOOR = 0,
+        WALL = 1,
+        PORTAL = 2,
+        FOOD = 3
+    };
+
+
     using namespace glm;    
     struct Level {
         
-        Level(const std::vector<vec2> _vertices, const ivec2 _size)
+        Level(const std::vector<vec2> _vertices, const ivec2 _size, const std::vector<std::vector<int>> _grid)
         :vertices(_vertices)
+        ,grid(_grid)
         {
             size = _size;
             biggestSize = (_size.x > _size.y) ? _size.x : _size.y;
@@ -22,6 +31,7 @@ namespace ost
         // BUFFER COMPONENT
         //
         const std::vector<vec2> vertices;
+        const std::vector<std::vector<int>> grid;
 
         void bindBufferVertices(const std::vector<Vertex>::iterator vertexBufferIterator) const {
             auto it = vertexBufferIterator;

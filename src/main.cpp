@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
 
     // SPRITE SHADER
     ost::Shader spriteShader = ost::makeShader_VBO_EBO(spriteShaderProgram, 24, 36, GL_STREAM_DRAW, GL_TRIANGLES);
-    ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {-13.0f, 1.5f}};
+    ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {-13.0f, 1.5f}, level};
    // ost::Ghost ghost1        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   4, {-9.0f, 1.5f}};
    // ost::Ghost ghost2        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   8, {-5.0f, 1.5f}};
    // ost::Ghost ghost3        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),  12, {0.0f, 1.5f}};
@@ -156,16 +156,16 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level) {
 
         lastKeyTime = glfwGetTime();
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   {
-            pacman.towards(ost::UP, level);
+            pacman.towards(ost::vecUp, level);
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  {
-            pacman.towards(ost::DOWN, level);
+            pacman.towards(ost::vecDown, level);
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) {
-            pacman.towards(ost::LEFT, level);
+            pacman.towards(ost::vecLeft, level);
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){
-            pacman.towards(ost::RIGHT, level);
+            pacman.towards(ost::vecRight, level);
         }
     }
     // 2. MOVE GHOSTS
