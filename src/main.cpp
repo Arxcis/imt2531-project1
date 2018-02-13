@@ -64,22 +64,22 @@ int main(int argc, char* argv[]) {
     const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/cheese.frag");
 
     // LEVEL SHADER
-    ost::Shader levelShader = ost::makeShader(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS); 
+    ost::Shader levelShader = ost::makeShader_VBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS); 
     level.bindBufferVertices( getVertexBufferIt(levelShader, level.vertices.size()) );      
     ost::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);        
     ost::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
 
     // SPRITE SHADER
-    ost::Shader spriteShader = ost::makeShader(spriteShaderProgram, 24, GL_STREAM_DRAW, GL_TRIANGLES, 30);
+    ost::Shader spriteShader = ost::makeShader_VBO_EBO(spriteShaderProgram, 24, 36, GL_STREAM_DRAW, GL_TRIANGLES);
     ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {-13.0f, 1.5f}};
    // ost::Ghost ghost1        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   4, {-9.0f, 1.5f}};
-//    ost::Ghost ghost2        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   8, {-5.0f, 1.5f}};
-  //  ost::Ghost ghost3        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),  12, {0.0f, 1.5f}};
+   // ost::Ghost ghost2        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),   8, {-5.0f, 1.5f}};
+   // ost::Ghost ghost3        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),  12, {0.0f, 1.5f}};
    // ost::Ghost ghost4        = ost::Ghost{ getVertexBufferIt(spriteShader, 4), elementBufferIt(spriteShader, 6),  16, {3.0f, 1.5f}};
    // ost::commit(spriteShader);
   
     // CHEESE SHADER  
-    ost::Shader cheeseShader = ost::makeShader(cheeseShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
+    ost::Shader cheeseShader = ost::makeShader_VBO(cheeseShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
     ost::setUniformFloat(cheeseShader, "pointSize", 15.0f);
     for (auto v : level.vertices) {
         ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v};
@@ -192,9 +192,9 @@ inline void render(GLFWwindow* window,
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    draw(levelShader);
-    draw(cheeseShader);
-    draw(spriteShader);
+    draw_VBO(levelShader);
+    draw_VBO(cheeseShader);
+    draw_VBO_EBO(spriteShader);
 
     glfwSwapBuffers(window);
 }

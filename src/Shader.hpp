@@ -43,27 +43,37 @@ struct Shader
     size_t                        elementBufferCount{};
 };
 
+inline void
+_bindVertexArrayAttributes(Shader& shader) {
+    shader.positionAttribute = glGetAttribLocation(shader.program, "position");
+    shader.colorAttribute    = glGetAttribLocation(shader.program, "color");
+    shader.texcoordAttribute = glGetAttribLocation(shader.program, "texcoord");
 
+    glVertexAttribPointer(shader.positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    glVertexAttribPointer(shader.colorAttribute,    4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec2));
+    glVertexAttribPointer(shader.texcoordAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec2)+sizeof(glm::vec4)));
+
+    glEnableVertexAttribArray(shader.positionAttribute);
+    glEnableVertexAttribArray(shader.colorAttribute);
+    glEnableVertexAttribArray(shader.texcoordAttribute);
+} 
+
+//
+// @function makeShader_VBO
+//
 inline Shader 
-makeShader(const GLuint  program, 
-           const GLuint maxVertexCount, 
-           const GLenum updateMode, // GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
-           const GLenum drawMode,    // GL_POINTS, GL_TRIANGLES
-           const GLuint maxElementCount = 0
-                            ) 
+makeShader_VBO(const GLuint program, 
+               const GLuint maxVertexCount, 
+               const GLenum updateMode, // GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
+               const GLenum drawMode    // GL_POINTS, GL_TRIANGLES
+               ) 
 {
-    
     Shader shader = Shader{};
     shader.program = program;
     glUseProgram(shader.program);
     
     glGenVertexArrays(1, &(shader.vao));
-    glBindVertexArray(shader.vao);
     glGenBuffers(1, &(shader.vbo));
-
-    shader.positionAttribute = glGetAttribLocation(shader.program, "position");
-    shader.colorAttribute    = glGetAttribLocation(shader.program, "color");
-    shader.texcoordAttribute = glGetAttribLocation(shader.program, "texcoord");
 
     // "The ordering doesn’t matter as long as you bind the VBO before using glBufferData and glBindVertexArray before you call glVertexAttribPointer."
     //  @doc http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 12.02.18
@@ -75,20 +85,50 @@ makeShader(const GLuint  program,
     glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
     glBufferData(GL_ARRAY_BUFFER, shader.maxVertexCount * sizeof(Vertex), shader.vertexBuffer.data(), shader.updateMode);
 
-    glVertexAttribPointer(shader.positionAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-    glVertexAttribPointer(shader.colorAttribute,    4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)sizeof(glm::vec2));
-    glVertexAttribPointer(shader.texcoordAttribute, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(glm::vec2)+sizeof(glm::vec4)));
+    glBindVertexArray(shader.vao);
+    _bindVertexArrayAttributes(shader);
 
+    glBindVertexArray(0);
+    glUseProgram(0);
+    return shader;
+}
+
+//
+// @function makeShader_VBO_EBO
+//
+inline Shader 
+makeShader_VBO_EBO(const GLuint program, 
+                   const GLuint maxVertexCount, 
+                   const GLuint maxElementCount,
+                   const GLenum updateMode, // GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
+                   const GLenum drawMode    // GL_POINTS, GL_TRIANGLES
+           ) 
+{
+    
+    Shader shader = Shader{};
+    shader.program = program;
+    glUseProgram(shader.program);
+    
+    glGenVertexArrays(1, &(shader.vao));
+    glGenBuffers(1, &(shader.vbo));
+    glGenBuffers(1, &(shader.ebo));
+
+    // "The ordering doesn’t matter as long as you bind the VBO before using glBufferData and glBindVertexArray before you call glVertexAttribPointer."
+    //  @doc http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 12.02.18
+
+    shader.drawMode       = drawMode;
+    shader.updateMode     = updateMode;
+    shader.maxVertexCount = maxVertexCount;
     shader.maxElementCount = maxElementCount;
-    if (shader.maxElementCount > 0) {
-        glGenBuffers(1, &(shader.ebo));
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, shader.maxElementCount * sizeof(int), shader.elementBuffer.data(), shader.updateMode);
-    }
 
-    glEnableVertexAttribArray(shader.positionAttribute);
-    glEnableVertexAttribArray(shader.colorAttribute);
-    glEnableVertexAttribArray(shader.texcoordAttribute);
+    glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
+    glBufferData(GL_ARRAY_BUFFER, shader.maxVertexCount * sizeof(Vertex), shader.vertexBuffer.data(), shader.updateMode);
+    
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, shader.maxElementCount * sizeof(int), shader.elementBuffer.data(), shader.updateMode);
+
+    glBindVertexArray(shader.vao);
+    _bindVertexArrayAttributes(shader);
 
     glBindVertexArray(0);
     glUseProgram(0);
@@ -96,8 +136,11 @@ makeShader(const GLuint  program,
 }
 
 
-void 
-draw(const Shader& shader) 
+//
+// @function draw_VBO
+//
+inline void 
+draw_VBO(const Shader& shader) 
 {
     glUseProgram(shader.program);   
     glBindVertexArray(shader.vao);
@@ -105,16 +148,29 @@ draw(const Shader& shader)
     glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
     glBufferSubData(GL_ARRAY_BUFFER, 0, shader.vertexBuffer.size()*sizeof(Vertex), shader.vertexBuffer.data());
    
-    if (shader.maxElementCount == 0) {
-        glDrawArrays(shader.drawMode, 0, shader.vertexBuffer.size());
+    glDrawArrays(shader.drawMode, 0, shader.vertexBuffer.size());
 
-    } else {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
 
-       // std::cout << "esize: " << shader.elementBuffer.size() << " vsize: " <<shader.vertexBuffer.size() << "\n";
-        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, shader.elementBuffer.size()*sizeof(int), shader.elementBuffer.data());
-        glDrawElements(shader.drawMode, shader.elementBuffer.size(), GL_UNSIGNED_INT, 0);
-    }
+//
+// @function draw_VBO_EBO
+//
+inline void 
+draw_VBO_EBO(const Shader& shader) 
+{
+    glUseProgram(shader.program);   
+    glBindVertexArray(shader.vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, shader.vertexBuffer.size()*sizeof(Vertex), shader.vertexBuffer.data());
+   
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
+
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, shader.elementBuffer.size()*sizeof(int), shader.elementBuffer.data());
+    glDrawElements(shader.drawMode, shader.elementBuffer.size(), GL_UNSIGNED_INT, 0);
+
     glBindVertexArray(0);
     glUseProgram(0);
 }
