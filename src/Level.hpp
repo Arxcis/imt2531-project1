@@ -59,9 +59,10 @@ namespace ost
 
         void bindBufferVertices(Mesh::Mesh mesh) const {
             auto vbo = mesh.VBO;
+            auto vboindex = mesh.VBOindex;
             for(auto v : vertices) {
-                (*vbo).position = v;
-                vbo++;
+                (*vbo)[vboindex].position = v;
+                vboindex += 1;
             }
         }
 
@@ -110,6 +111,7 @@ namespace ost
         {
             const float margin = 0.4f;
 
+#ifndef OPTIMIZE
             if (direction.y > 0 && direction.x > 0) {
                 LOG_ERROR("OMG, direction.x and direction.y is both > 0. DIAGONAL movement not supported!");
             }
@@ -117,15 +119,14 @@ namespace ost
             if( direction.y == 0 && direction.x == 0){
                 LOG_ERROR("ENTITY does not have any direction. Undefined behaviour!");                
             }
+#endif
 
-            if (direction.y == 0) {
-             //   LOG_DEBUG("(center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin) %d\n", (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin));
-                
-                return (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin);
+            if (direction.x) {
+                // LOG_DEBUG("(center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin) %d\n", (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin));                
+                return abs(center.x - (gridIndex.x+0.5)) < 0.1;
             } else {
                // LOG_DEBUG("(center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin) %d\n", (center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin));
-                
-                return (center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin);
+                return abs(center.y - (gridIndex.y+0.5) < 0.1);
             }
 
             LOG_ERROR("HOW DA FUCK DID YOU GET ALL THE WAY HERE !??????? ");            

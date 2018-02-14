@@ -46,20 +46,24 @@ struct Pacman {
         PACMAN_RIGHT0, PACMAN_RIGHT1, PACMAN_RIGHT2, PACMAN_RIGHT3,
     };
     
-    const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
-    const glm::vec2              size = { 1.0f, 1.0f };
-    const float                  speed = 3.0f;
+    std::vector<ost::Rect> uv;
+    glm::vec2              size = { 1.0f, 1.0f };
+    float                  speed = 3.0f;
     
-    Mesh::Mesh mesh;
-    glm::vec2    pos;
+    Mesh::Mesh   mesh{};
+    glm::vec2    pos{};
     int          animationFrame = PACMAN_RIGHT3;
-    glm::ivec2   direction       = { 1, 0 };
+    glm::ivec2   direction      = { 1, 0 };
     double nextUpdateTime = 0.0;
-  
-    Pacman(Mesh::Mesh _mesh,
-           const glm::vec2 _pos) 
+    
+    Pacman() = default;
+    Pacman(const Pacman& pacman) :mesh(pacman.mesh), pos(pacman.pos),uv(pacman.uv){}
+    Pacman& operator=(const Pacman& other) = default;
+
+    Pacman(Mesh::Mesh _mesh, const glm::vec2 _pos, std::vector<ost::Rect> _uv) 
     :mesh(_mesh)
     ,pos(_pos)
+    ,uv(_uv)
     {
         Mesh::bindRect(mesh, pos, size, uv[animationFrame]);
     }
@@ -100,19 +104,24 @@ struct Ghost {
         GHOST_RIGHT0, GHOST_RIGHT1
     };
 
-    const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f});
-    const glm::vec2              size = { 1.0f, 1.0f };
-    const float                  speed = 3.0f;
-    Mesh::Mesh    mesh;
-    glm::vec2       pos;
+    std::vector<ost::Rect> uv;
+    glm::vec2              size  = { 1.0f, 1.0f };
+    float                  speed = 3.0f;
+    Mesh::Mesh      mesh{};
+    glm::vec2       pos{};
     int             animationFrame = GHOST_DOWN0;
     glm::ivec2      direction      = { 1, 0};
-    double nextUpdateTime = 0.0;
+    double          nextUpdateTime = 0.0;
     
-    Ghost(Mesh::Mesh  _mesh,
-          const glm::vec2 _pos) 
+
+    Ghost() = default;    
+    Ghost(const Ghost& ghost):mesh(ghost.mesh),pos(ghost.pos),uv(ghost.uv){}
+    Ghost& operator=(const Ghost& other) = default;
+
+    Ghost(Mesh::Mesh _mesh, glm::vec2 _pos, std::vector<ost::Rect> _uv) 
     :mesh(_mesh)
     ,pos(_pos)
+    ,uv(_uv)
     {
         Mesh::bindRect(mesh, pos, size, uv[animationFrame]);
     }
@@ -140,6 +149,7 @@ struct Ghost {
         if (gameTime > nextUpdateTime) {
             nextUpdateTime += timeStep;
             animationFrame = getNextAnimationFrame(animationFrame, direction, GHOST_UP0, GHOST_DOWN0, GHOST_LEFT0, GHOST_RIGHT0, 2);
+            
             Mesh::updateRect(mesh, pos, size, uv[animationFrame]);            
         }
     }
@@ -150,14 +160,17 @@ struct Cheese {
     Mesh::Mesh mesh;
     glm::vec2 pos;
 
-    Cheese(Mesh::Mesh _mesh,
-           const glm::vec2 _pos
-          ) 
+    Cheese(Mesh::Mesh _mesh, glm::vec2 _pos) 
     :mesh(_mesh)
     ,pos(_pos)
     {
-        mesh.VBO[0].position = pos;
+        (*mesh.VBO)[mesh.VBOindex].position = pos;
     }
 };
+
+struct Font {
+
+};
+
 
 } // END NAMESPACE OST

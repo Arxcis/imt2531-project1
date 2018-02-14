@@ -6,6 +6,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h" // grab from here --> https://github.com/nothings/stb/blob/master/stb_image.h
 #include "GL/glew.h"
+#include "./logger.h"
 
 namespace ost {
 //
@@ -21,7 +22,7 @@ GLuint loadTexture(const char* filepath) {
     unsigned char *data = stbi_load(filepath, &width, &height, &channelCount, 0);
 
     if (!data)
-        PANIC("loadTexture - no data in 'unsigned char *data = stbi_load();'");
+        LOG_ERROR("loadTexture - no data in 'unsigned char *data = stbi_load();'");
 
     GLuint textureID;
     glGenTextures(1, &textureID);
@@ -44,6 +45,7 @@ GLuint loadTexture(const char* filepath) {
     
   //  glGenerateMipmap(GL_TEXTURE_2D);
     
+    glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(data);
     return textureID;
 }
