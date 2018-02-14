@@ -42,7 +42,7 @@ const Color CHEESE = {.3f, .9f, .3f, 1.0f};
 
 inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname);
 inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts);
-inline void render(GLFWwindow* window, const Shader::Shader& levelShader, const Shader::Shader& spriteShader, const Shader::Shader& cheeseShader);
+inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader);
 
 
 int main(int argc, char* argv[]) {
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     const GLuint levelShaderProgram  = ost::loadShaderProgram("./shaders/general.vert", "./shaders/level.geo","./shaders/level.frag");
     const GLuint spriteShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/sprite.frag");
     const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/cheese.frag");
-
+    const GLuint fontShaderProgram   = ost::loadShaderProgram("./shaders/general.vert", "./shaders/font.frag");
 
 
     LOG_INFO("INIT LEVEL SHADER");
@@ -138,7 +138,6 @@ int main(int argc, char* argv[]) {
         cheeseShader = Shader::makeShader_VBO(cheeseShaderProgram, GL_STATIC_DRAW, GL_POINTS, level.vertices.size());
 
         for (const auto v : level.vertices) {
-
             cheese.push_back(ost::Cheese{ 
                 getMesh(cheeseShader, cheeseVertexCount),
                 v + cheeseOffset 
@@ -155,17 +154,37 @@ int main(int argc, char* argv[]) {
         
     LOG_INFO("INIT FONT SHADER");
     Shader::Shader fontShader;
+    ost::Text text;
     {   
-        auto fontUV              = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
-        const GLuint fontDiffuse = ost::loadTexture("./textures/font512.png");
+        auto   textUV      = ost::makeSpriteUVCoordinates(16,16, 128, {0, 0}, {511, 511}, {511, 511});
+        GLuint fontDiffuse = ost::loadTexture("./textures/font512.png");
 
-        const size_t letterCount = 20;
-        const size_t maxVertex   = letterCount * 4;
-        const size_t maxElement  = maxVertex * 1.5;
+        std::string textString = "HELLO PACMAN";
 
-        fontShader = Shader::makeShader_VBO_EBO_TEX(spriteShaderProgram, fontDiffuse, GL_STREAM_DRAW, GL_TRIANGLES, maxVertex, maxElement);    
-        
+        size_t letterVertexCount  = 4;
+        size_t letterElementCount = 6;
+        size_t letterCount = textString.size();
+        size_t maxVertex   = letterCount * letterVertexCount;
+        size_t maxElement  = letterCount * letterElementCount;
+        auto   textPos     = glm::vec2{ 2, 17};
+        auto   textSize    = glm::vec2{ 2 ,2};
+
+        fontShader = Shader::makeShader_VBO_EBO_TEX(fontShaderProgram, fontDiffuse, GL_STREAM_DRAW, GL_TRIANGLES, maxVertex, maxElement);    
+            
+        auto textMesh = Shader::getMesh(fontShader, letterVertexCount * textString.size(), letterElementCount * textString.size());
+        text = ost::Text{
+            textMesh,
+            textPos,
+            textSize,
+            textUV,
+            textString
+        };
+
+        Shader::setUniformMat4(fontShader, "scale", level.scaleMatrix);
+        Shader::setUniformMat4(fontShader, "move",  level.moveMatrix);
     }
+
+
 
 
     //
@@ -175,7 +194,7 @@ int main(int argc, char* argv[]) {
     while (running) {
         
         running = update(window, pacman, level, ghosts);
-        render(window, levelShader, spriteShader, cheeseShader);
+        render(window, levelShader, spriteShader, cheeseShader, fontShader);
     }
 
     //
@@ -187,7 +206,8 @@ int main(int argc, char* argv[]) {
 }
 
 
-inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname) {
+inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname) 
+{
     // INITIALIZE G L F W
     if (!glfwInit()){
         glfwTerminate();
@@ -220,9 +240,8 @@ inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, 
 }
 
 
-inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts) {
-   
-
+inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts) 
+{
     glfwPollEvents();
 
     // Configure delta time
@@ -287,16 +306,14 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
 }
 
 
-inline void render(GLFWwindow* window,
-                const   Shader::Shader& levelShader,
-                const   Shader::Shader& spriteShader,
-                const   Shader::Shader& cheeseShader) {
-
+inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader) 
+{
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     Shader::drawVBO(levelShader);
     Shader::drawVBO(cheeseShader);
     Shader::drawVBO_EBO_TEX(spriteShader);
+    Shader::drawVBO_EBO_TEX(fontShader);
 
     glfwSwapBuffers(window);
 }

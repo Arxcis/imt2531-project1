@@ -75,8 +75,10 @@ struct Mesh
     int VBOindex;
     int EBOindex;
 };
-inline void bindRect(const Mesh& mesh,const glm::vec2 pos,const glm::vec2 size,const ost::Rect uv);
-inline void updateRect(const Mesh& mesh,const glm::vec2 pos,const glm::vec2 size,const ost::Rect uv);
+
+inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n);
+inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n);
+
 }
 
 
@@ -328,45 +330,43 @@ inline void setUniformMat4(const Shader& shader, const std::string uniname, cons
 
 namespace Mesh {
     
-inline void bindRect(const Mesh& mesh,
-                     const glm::vec2 pos,
-                     const glm::vec2 size,
-                     const ost::Rect uv) 
+inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n) 
 {
+    auto offsetVBO = mesh.VBOindex + n * 4;
+    auto offsetEBO = mesh.EBOindex + n * 6;
 
-    (*mesh.VBO)[mesh.VBOindex + 0].position = pos;
-    (*mesh.VBO)[mesh.VBOindex + 1].position = pos + glm::vec2{ size.x, 0.0f};
-    (*mesh.VBO)[mesh.VBOindex + 2].position = pos + glm::vec2{ size.x, -size.y };
-    (*mesh.VBO)[mesh.VBOindex + 3].position = pos + glm::vec2{ 0.0f,   -size.y };
+    (*mesh.VBO)[offsetVBO + 0].position = pos;
+    (*mesh.VBO)[offsetVBO + 1].position = pos + glm::vec2{ size.x, 0.0f};
+    (*mesh.VBO)[offsetVBO + 2].position = pos + glm::vec2{ size.x, -size.y };
+    (*mesh.VBO)[offsetVBO + 3].position = pos + glm::vec2{ 0.0f,   -size.y };
     
-    (*mesh.VBO)[mesh.VBOindex + 0].texCoord = uv.topleft;
-    (*mesh.VBO)[mesh.VBOindex + 1].texCoord = uv.topright;
-    (*mesh.VBO)[mesh.VBOindex + 2].texCoord = uv.botright;    
-    (*mesh.VBO)[mesh.VBOindex + 3].texCoord = uv.botleft;
+    (*mesh.VBO)[offsetVBO + 0].texCoord = uv.topleft;
+    (*mesh.VBO)[offsetVBO + 1].texCoord = uv.topright;
+    (*mesh.VBO)[offsetVBO + 2].texCoord = uv.botright;    
+    (*mesh.VBO)[offsetVBO + 3].texCoord = uv.botleft;
 
-    (*mesh.EBO)[mesh.EBOindex + 0] = mesh.VBOindex+0;   
-    (*mesh.EBO)[mesh.EBOindex + 1] = mesh.VBOindex+1;
-    (*mesh.EBO)[mesh.EBOindex + 2] = mesh.VBOindex+2;
-    (*mesh.EBO)[mesh.EBOindex + 3] = mesh.VBOindex+2;
-    (*mesh.EBO)[mesh.EBOindex + 4] = mesh.VBOindex+3;
-    (*mesh.EBO)[mesh.EBOindex + 5] = mesh.VBOindex+0;
+    (*mesh.EBO)[offsetEBO + 0] = offsetVBO+0;   
+    (*mesh.EBO)[offsetEBO + 1] = offsetVBO+1;
+    (*mesh.EBO)[offsetEBO + 2] = offsetVBO+2;
+    (*mesh.EBO)[offsetEBO + 3] = offsetVBO+2;
+    (*mesh.EBO)[offsetEBO + 4] = offsetVBO+3;
+    (*mesh.EBO)[offsetEBO + 5] = offsetVBO+0;
 }
 
 
-inline void updateRect(const Mesh& mesh,
-                       const glm::vec2 pos,
-                       const glm::vec2 size,
-                       const ost::Rect uv) 
+inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n) 
 {
-    (*mesh.VBO)[mesh.VBOindex + 0].position = pos;
-    (*mesh.VBO)[mesh.VBOindex + 1].position = pos + glm::vec2{ size.x, 0.0f};
-    (*mesh.VBO)[mesh.VBOindex + 2].position = pos + glm::vec2{ size.x, -size.y };
-    (*mesh.VBO)[mesh.VBOindex + 3].position = pos + glm::vec2{ 0.0f, -size.y };
+    auto offsetVBO = mesh.VBOindex + n * 4;
+
+    (*mesh.VBO)[offsetVBO + 0].position = pos;
+    (*mesh.VBO)[offsetVBO + 1].position = pos + glm::vec2{ size.x, 0.0f};
+    (*mesh.VBO)[offsetVBO + 2].position = pos + glm::vec2{ size.x, -size.y };
+    (*mesh.VBO)[offsetVBO + 3].position = pos + glm::vec2{ 0.0f, -size.y };
   
-    (*mesh.VBO)[mesh.VBOindex + 0].texCoord = uv.topleft;
-    (*mesh.VBO)[mesh.VBOindex + 1].texCoord = uv.topright;
-    (*mesh.VBO)[mesh.VBOindex + 2].texCoord = uv.botright;    
-    (*mesh.VBO)[mesh.VBOindex + 3].texCoord = uv.botleft;
+    (*mesh.VBO)[offsetVBO + 0].texCoord = uv.topleft;
+    (*mesh.VBO)[offsetVBO + 1].texCoord = uv.topright;
+    (*mesh.VBO)[offsetVBO + 2].texCoord = uv.botright;    
+    (*mesh.VBO)[offsetVBO + 3].texCoord = uv.botleft;
 }
 
 } // END NAMESPACE MESH
