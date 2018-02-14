@@ -70,31 +70,27 @@ struct Pacman {
     const float                 speed = 3.0f;
     const std::vector<ost::Vertex>::iterator vertexBufferIt;
     const std::vector<int>::iterator         elementBufferIt;
-    ost::Level&            level;
     const int bufferOffset;
     
     glm::vec2                    pos;
     int                          animationFrame = PACMAN_RIGHT3;
     glm::ivec2                   direction       = { 1, 0 };
-    glm::ivec2                   wantedDirection = {1, 0};
   
     Pacman(const std::vector<ost::Vertex>::iterator _vertexBuffer,
            const std::vector<int>::iterator         _elementBuffer,
            const int _bufferOffset,
-           const glm::vec2 _pos,
-            ost::Level& _level
+           const glm::vec2 _pos
            ) 
 
     :vertexBufferIt(_vertexBuffer)
     ,elementBufferIt(_elementBuffer)
     ,bufferOffset(_bufferOffset)
     ,pos(_pos)
-    ,level(_level)
     {
         bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
     }
 
-    void move(const float dt) {
+    void move(const float dt, Level& level) {
         if (level.canWalkToward(pos, size, direction))
             pos += glm::vec2{direction} * dt * speed;
             
@@ -109,7 +105,6 @@ struct Pacman {
             }
         }
     }
-
 
 
     void animate(const float dt) {
@@ -161,11 +156,11 @@ struct Ghost {
     const std::vector<ost::Vertex>::iterator vertexBufferIt;
     const std::vector<int>::iterator         elementBufferIt;
     const int bufferOffset;
+    const float speed = 3.0f;
 
     glm::vec2                    pos;
     int                          animationFrame = GHOST_DOWN0;
     glm::ivec2                   direction      = { 1, 0};
-
 
     Ghost(const std::vector<ost::Vertex>::iterator _vertexBuffer,
           const std::vector<int>::iterator         _elementBuffer,
@@ -181,8 +176,24 @@ struct Ghost {
         bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
     }
 
+    void move(const float dt, Level& level) {
+        if (level.canWalkToward(pos, size, direction))
+            pos += glm::vec2{direction} * dt * speed;
+            
+    }
+
+    void towards(const glm::ivec2 _wantedDirection, Level& level) {
+        
+        if (_wantedDirection != direction) {
+            if (level.canChangeDirection(pos, size, direction, _wantedDirection)){
+                direction = _wantedDirection;  
+                pos = level.getTileSnapPosition(pos, size);
+            }
+        }
+    }
+
     void animate(const float dt) {
-        const float frameTimeLimit = .05f;
+        const float frameTimeLimit = .017f*4;
         static float deltaFrameTime = 0.0f;
 
         deltaFrameTime += dt;

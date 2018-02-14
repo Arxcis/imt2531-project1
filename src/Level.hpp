@@ -4,6 +4,8 @@
 #include "glm/glm.hpp"
 #include "./Shader.hpp"
 #include "./logger.h"
+
+
 namespace ost
 {
     enum TileTypes : int {
@@ -62,13 +64,12 @@ namespace ost
         }
 
 
-        private:
-        glm::vec2 getCenterPosition(glm::vec2 coordinate, glm::vec2 size) 
+        static glm::vec2 getCenterPosition(glm::vec2 coordinate, glm::vec2 size) 
         {
             return glm::vec2{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};   
         }
-        public:
-        glm::vec2 getTileSnapPosition(glm::vec2 coordinate, glm::vec2 size) 
+
+        static glm::vec2 getTileSnapPosition(glm::vec2 coordinate, glm::vec2 size) 
         {
             const auto center = getCenterPosition(coordinate, size);            
             return glm::vec2{ int(center.x), int(center.y)+1 };
@@ -76,15 +77,15 @@ namespace ost
 
         bool canWalkToward(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction) 
         {
-            const auto center = getCenterPosition(coordinate, size);
+            const auto center = Level::getCenterPosition(coordinate, size);
             const auto gridIndex = glm::ivec2{center.x, center.y};
 
             const auto wantTile = grid[gridIndex.y +  direction.y ][gridIndex.x + direction.x];
 
-            LOG_DEBUG("cx: %.2f cy: %.2f ix: %d, iy: %d  dx: %.2f, dy: %.2f, tt: %d , wt: %d", center.x, center.y, gridIndex.x, gridIndex.y, direction.x*0.5, direction.y*0.5, grid[gridIndex.y][gridIndex.x],  grid[gridIndex.y+direction.y][gridIndex.x+direction.x]);
+        //    LOG_DEBUG("cx: %.2f cy: %.2f ix: %d, iy: %d  dx: %.2f, dy: %.2f, tt: %d , wt: %d", center.x, center.y, gridIndex.x, gridIndex.y, direction.x*0.5, direction.y*0.5, grid[gridIndex.y][gridIndex.x],  grid[gridIndex.y+direction.y][gridIndex.x+direction.x]);
 
             if (wantTile == ost::WALL) {
-                if (isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center)) {
+                if (Level::isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center)) {
                     return false;
                 } 
             } 
@@ -93,17 +94,17 @@ namespace ost
 
         bool canChangeDirection(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction, glm::ivec2 wantedDirection) 
         {
-            const auto center = getCenterPosition(coordinate, size);
+            const auto center = Level::getCenterPosition(coordinate, size);
             const auto gridIndex = glm::ivec2{center.x, center.y};
 
             if (!canWalkToward(coordinate, size, wantedDirection)) {
                 return false;
             }
             
-            return (isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center));
+            return (Level::isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center));
         }
 
-        bool isCloseEnoughToTheMiddleOfTile(const glm::ivec2 direction, const glm::ivec2 gridIndex, const glm::vec2 center) 
+        static bool isCloseEnoughToTheMiddleOfTile(const glm::ivec2 direction, const glm::ivec2 gridIndex, const glm::vec2 center) 
         {
             const float margin = 0.4f;
 

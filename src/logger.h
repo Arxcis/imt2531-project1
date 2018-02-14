@@ -70,7 +70,7 @@
 #define LOG_COLOR_BG_GREY "\033[0;47m"
 #define LOG_COLOR_BG_WHITE "\033[0m"
 
-#define LOG_NO_DEBUG 1
+
 
 ///////////////////////////////////////////////////////////
 /// \brief
