@@ -40,18 +40,19 @@ struct Pacman {
         Mesh::bindRect(mesh, pos, size, uv[animationFrame]);
     }
 
-    void move(const float dt, Level& level) {
-        if (level.canWalkToward(pos, size, direction))
+    void move(const float dt, const Grid& grid) {
+        if (Level::canWalkToward(grid, pos, size, direction))
             pos += glm::vec2{direction} * dt * speed;
             
     }
 
-    void towards(const glm::ivec2 _wantedDirection, Level& level) {
+    void towards(const glm::ivec2 _wantedDirection, const Grid& grid) {
         
         if (_wantedDirection != direction) {
-            if (level.canChangeDirection(pos, size, direction, _wantedDirection)){
+            if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
                 direction = _wantedDirection;  
-                pos = level.getTileSnapPosition(pos, size);
+                
+                pos = Level::getTileSnapPosition(pos, size);
             }
         }
     }
@@ -117,18 +118,18 @@ struct Ghost {
         Mesh::bindRect(mesh, pos, size, uv[animationFrame]);
     }
 
-    void move(const float dt, Level& level) {
-        if (level.canWalkToward(pos, size, direction))
+    void move(const float dt, const Grid& grid) {
+        if (Level::canWalkToward(grid, pos, size, direction))
             pos += glm::vec2{direction} * dt * speed;
             
     }
 
-    void towards(const glm::ivec2 _wantedDirection, Level& level) {
+    void towards(const glm::ivec2 _wantedDirection, const Grid& grid) {
         
         if (_wantedDirection != direction) {
-            if (level.canChangeDirection(pos, size, direction, _wantedDirection)){
+            if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
                 direction = _wantedDirection;  
-                pos = level.getTileSnapPosition(pos, size);
+                pos = Level::getTileSnapPosition(pos, size);
             }
         }
     }

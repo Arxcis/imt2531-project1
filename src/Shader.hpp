@@ -14,6 +14,7 @@
 
 namespace Mesh { struct Mesh; }
 namespace Shader {
+    
 using  Element = int;    
 struct Vertex
 {
@@ -321,9 +322,9 @@ inline void setUniformMat4(const Shader& shader, const std::string uniname, cons
 namespace Mesh {
     
 inline void bindRect(const Mesh& mesh,
-              const glm::vec2 pos,
-              const glm::vec2 size,
-              const ost::Rect uv) 
+                     const glm::vec2 pos,
+                     const glm::vec2 size,
+                     const ost::Rect uv) 
 {
     mesh.VBO[0].position = pos;
    
@@ -346,9 +347,9 @@ inline void bindRect(const Mesh& mesh,
 
 
 inline void updateRect(const Mesh& mesh,
-                const glm::vec2 pos,
-                const glm::vec2 size,
-                const ost::Rect uv) 
+                       const glm::vec2 pos,
+                       const glm::vec2 size,
+                       const ost::Rect uv) 
 {
     mesh.VBO[0].position = pos;
     mesh.VBO[1].position = pos + glm::vec2{ size.x, 0.0f};

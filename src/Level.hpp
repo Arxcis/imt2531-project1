@@ -8,6 +8,8 @@
 
 namespace ost
 {
+    using Grid = const std::vector<std::vector<int>>;
+
     enum TileTypes : int {
         FLOOR  = 0,
         WALL   = 1,
@@ -27,7 +29,7 @@ namespace ost
         const mat4 moveMatrix;
 
 
-        Level(const std::vector<vec2> _vertices, const ivec2 _size, const std::vector<std::vector<int>> _grid):
+        Level(const std::vector<vec2> _vertices, const ivec2 _size, Grid _grid):
         vertices(_vertices),
         size(_size),
         grid(_grid),
@@ -63,19 +65,7 @@ namespace ost
             }
         }
 
-
-        static glm::vec2 getCenterPosition(glm::vec2 coordinate, glm::vec2 size) 
-        {
-            return glm::vec2{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};   
-        }
-
-        static glm::vec2 getTileSnapPosition(glm::vec2 coordinate, glm::vec2 size) 
-        {
-            const auto center = getCenterPosition(coordinate, size);            
-            return glm::vec2{ int(center.x), int(center.y)+1 };
-        }
-
-        bool canWalkToward(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction) 
+        static bool canWalkToward(const Grid& grid, glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction) 
         {
             const auto center = Level::getCenterPosition(coordinate, size);
             const auto gridIndex = glm::ivec2{center.x, center.y};
@@ -92,16 +82,28 @@ namespace ost
             return true;
         }
 
-        bool canChangeDirection(glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction, glm::ivec2 wantedDirection) 
+        static bool canChangeDirection(const Grid& grid, glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction, glm::ivec2 wantedDirection) 
         {
             const auto center = Level::getCenterPosition(coordinate, size);
             const auto gridIndex = glm::ivec2{center.x, center.y};
 
-            if (!canWalkToward(coordinate, size, wantedDirection)) {
+            if (!canWalkToward(grid, coordinate, size, wantedDirection)) {
                 return false;
             }
             
             return (Level::isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center));
+        }
+
+
+        static glm::vec2 getCenterPosition(glm::vec2 coordinate, glm::vec2 size) 
+        {
+            return glm::vec2{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};   
+        }
+
+        static glm::vec2 getTileSnapPosition(glm::vec2 coordinate, glm::vec2 size) 
+        {
+            const auto center = getCenterPosition(coordinate, size);            
+            return glm::vec2{ int(center.x), int(center.y)+1 };
         }
 
         static bool isCloseEnoughToTheMiddleOfTile(const glm::ivec2 direction, const glm::ivec2 gridIndex, const glm::vec2 center) 
@@ -128,8 +130,5 @@ namespace ost
 
             LOG_ERROR("HOW DA FUCK DID YOU GET ALL THE WAY HERE !??????? ");            
         }
-
-
     };
-
 }

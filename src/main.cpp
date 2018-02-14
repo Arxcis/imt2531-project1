@@ -168,26 +168,26 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     // UPDATE
     // 1. MOVE ANIMATE PACMAN -  W, A, S, D
     {
-        pacman.move(deltaTime, level);
+        pacman.move(deltaTime, level.grid);
         pacman.animate(deltaTime);
 
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   {
-            pacman.towards(ost::vecUp, level);
+            pacman.towards(ost::vecUp, level.grid);
         }
         if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)  {
-            pacman.towards(ost::vecDown, level);
+            pacman.towards(ost::vecDown, level.grid);
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) {
-            pacman.towards(ost::vecLeft, level);
+            pacman.towards(ost::vecLeft, level.grid);
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){
-            pacman.towards(ost::vecRight, level);
+            pacman.towards(ost::vecRight, level.grid);
         }
     }
     // 2. MOVE GHOSTS
     {   
         for(auto& g : ghosts) {
-            g.move(deltaTime, level);
+            g.move(deltaTime, level.grid);
             g.animate(deltaTime);
         }
 
@@ -204,7 +204,7 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
                 y = (rand() %2)? y*-1:y;   // random y is 1 or -1
             }
 
-            ghosts[rand() % ghosts.size()].towards(glm::ivec2{x, y}, level);     
+            ghosts[rand() % ghosts.size()].towards(glm::ivec2{x, y}, level.grid);     
             randomEventLimit += step;
         }    
     }
