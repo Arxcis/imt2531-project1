@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
     Shader::setUniformMat4(levelShader, "move", level.moveMatrix);
 
 
-    LOG_INFO("INIT SPRITE SHADER");
+    LOG_INFO("INIT SPRITE SHADER"); 
     Shader::Shader spriteShader = Shader::makeVBO_EBO(spriteShaderProgram, 28, 42, GL_STREAM_DRAW, GL_TRIANGLES);
    
     const int rectVertexCount = 4;
@@ -103,7 +103,6 @@ int main(int argc, char* argv[]) {
     Shader::setUniformFloat(cheeseShader, "pointSize", 5.0f);
     Shader::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
     Shader::setUniformMat4(cheeseShader, "move", level.moveMatrix);
-
 
     //
     // GAMELOOP
@@ -169,7 +168,7 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     // 1. MOVE ANIMATE PACMAN -  W, A, S, D
     {
         pacman.move(deltaTime, level.grid);
-        pacman.animate(deltaTime);
+        pacman.animate(baseTime);
 
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   {
             pacman.towards(ost::vecUp, level.grid);
@@ -188,7 +187,7 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     {   
         for(auto& g : ghosts) {
             g.move(deltaTime, level.grid);
-            g.animate(deltaTime);
+            g.animate(baseTime);
         }
 
         const  double step = 0.08;
