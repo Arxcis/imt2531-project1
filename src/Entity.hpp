@@ -9,52 +9,10 @@
 namespace ost {
 
 const auto vecUp    = glm::ivec2(0, 1);
-const auto vecDown  = glm::ivec2(0, -1);
+const auto vecDown  = glm::ivec2(0,-1);
 const auto vecRight = glm::ivec2(1, 0);
 const auto vecLeft  = glm::ivec2(-1,0);
 
-void bufferBindRect(const std::vector<ost::Vertex>::iterator vertIt, 
-                    const std::vector<int>::iterator eleIt,
-                    const int elementOffset,
-                    const glm::vec2 pos,
-                    const glm::vec2 size,
-                    const ost::Rect uv) 
-{
-    vertIt[0].position = pos;
-   
-    vertIt[1].position = pos + glm::vec2{ size.x, 0.0f};
-    vertIt[2].position = pos + glm::vec2{ size.x, -size.y };
-    vertIt[3].position = pos + glm::vec2{ 0.0f,   -size.y };
-    
-    vertIt[0].texCoord = uv.topleft;
-    vertIt[1].texCoord = uv.topright;
-    vertIt[2].texCoord = uv.botright;    
-    vertIt[3].texCoord = uv.botleft;
-
-    eleIt[0] = elementOffset+0;   
-    eleIt[1] = elementOffset+1;
-    eleIt[2] = elementOffset+2;
-    eleIt[3] = elementOffset+2;
-    eleIt[4] = elementOffset+3;
-    eleIt[5] = elementOffset+0;
-}
-
-
-void bufferUpdateRect(const std::vector<ost::Vertex>::iterator vertIt,
-                      const glm::vec2 pos,
-                      const glm::vec2 size,
-                      const ost::Rect uv) 
-{
-    vertIt[0].position = pos;
-    vertIt[1].position = pos + glm::vec2{ size.x, 0.0f};
-    vertIt[2].position = pos + glm::vec2{ size.x, -size.y };
-    vertIt[3].position = pos + glm::vec2{ 0.0f, -size.y };
-    
-    vertIt[0].texCoord = uv.topleft;
-    vertIt[1].texCoord = uv.topright;
-    vertIt[2].texCoord = uv.botright;    
-    vertIt[3].texCoord = uv.botleft;
-}
 
 struct Pacman {
 
@@ -66,28 +24,20 @@ struct Pacman {
     };
     
     const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
-    const glm::vec2             size = { 1.0f, 1.0f };
-    const float                 speed = 3.0f;
-    const std::vector<ost::Vertex>::iterator vertexBufferIt;
-    const std::vector<int>::iterator         elementBufferIt;
-    const int bufferOffset;
+    const glm::vec2              size = { 1.0f, 1.0f };
+    const float                  speed = 3.0f;
     
-    glm::vec2                    pos;
-    int                          animationFrame = PACMAN_RIGHT3;
-    glm::ivec2                   direction       = { 1, 0 };
+    Mesh::Mesh mesh;
+    glm::vec2    pos;
+    int          animationFrame = PACMAN_RIGHT3;
+    glm::ivec2   direction       = { 1, 0 };
   
-    Pacman(const std::vector<ost::Vertex>::iterator _vertexBuffer,
-           const std::vector<int>::iterator         _elementBuffer,
-           const int _bufferOffset,
-           const glm::vec2 _pos
-           ) 
-
-    :vertexBufferIt(_vertexBuffer)
-    ,elementBufferIt(_elementBuffer)
-    ,bufferOffset(_bufferOffset)
+    Pacman(Mesh::Mesh _mesh,
+           const glm::vec2 _pos) 
+    :mesh(_mesh)
     ,pos(_pos)
     {
-        bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
+        Mesh::bindRect(mesh, pos, size, uv[animationFrame]);
     }
 
     void move(const float dt, Level& level) {
@@ -138,7 +88,7 @@ struct Pacman {
             else if (direction == ost::vecRight){
                     animationFrame = PACMAN_RIGHT0 + offset;
             }
-            bufferUpdateRect(vertexBufferIt, pos, size, uv[animationFrame]);
+            Mesh::updateRect(mesh, pos, size, uv[animationFrame]);
         }
     }
 };
@@ -153,27 +103,18 @@ struct Ghost {
 
     const std::vector<ost::Rect> uv = ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f});
     const glm::vec2              size = { 1.0f, 1.0f };
-    const std::vector<ost::Vertex>::iterator vertexBufferIt;
-    const std::vector<int>::iterator         elementBufferIt;
-    const int bufferOffset;
-    const float speed = 3.0f;
+    const float                  speed = 3.0f;
+    Mesh::Mesh    mesh;
+    glm::vec2       pos;
+    int             animationFrame = GHOST_DOWN0;
+    glm::ivec2      direction      = { 1, 0};
 
-    glm::vec2                    pos;
-    int                          animationFrame = GHOST_DOWN0;
-    glm::ivec2                   direction      = { 1, 0};
-
-    Ghost(const std::vector<ost::Vertex>::iterator _vertexBuffer,
-          const std::vector<int>::iterator         _elementBuffer,
-          const int _bufferOffset,
-          const glm::vec2 _pos
-          ) 
-
-    :vertexBufferIt(_vertexBuffer)
-    ,elementBufferIt(_elementBuffer)
-    ,bufferOffset(_bufferOffset)
+    Ghost(Mesh::Mesh  _mesh,
+          const glm::vec2 _pos) 
+    :mesh(_mesh)
     ,pos(_pos)
     {
-        bufferBindRect(vertexBufferIt, elementBufferIt, bufferOffset, pos, size, uv[animationFrame]);
+        Mesh::bindRect(mesh, pos, size, uv[animationFrame]);
     }
 
     void move(const float dt, Level& level) {
@@ -214,23 +155,23 @@ struct Ghost {
             else if (direction == ost::vecRight){
                     animationFrame = GHOST_RIGHT0 + offset;
             }
-            bufferUpdateRect(vertexBufferIt, pos, size, uv[animationFrame]);            
+            Mesh::updateRect(mesh, pos, size, uv[animationFrame]);            
         }
     }
 
 };
 
 struct Cheese {
-    const std::vector<ost::Vertex>::iterator vertexBufferIt;
+    Mesh::Mesh mesh;
     glm::vec2 pos;
 
-    Cheese(const std::vector<ost::Vertex>::iterator _vertexBuffer,
+    Cheese(Mesh::Mesh _mesh,
            const glm::vec2 _pos
           ) 
-    :vertexBufferIt(_vertexBuffer)
+    :mesh(_mesh)
     ,pos(_pos)
     {
-        vertexBufferIt->position = pos;
+        mesh.VBO[0].position = pos;
     }
 };
 

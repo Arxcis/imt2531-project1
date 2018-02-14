@@ -42,7 +42,7 @@ const Color CHEESE = {.3f, .9f, .3f, 1.0f};
 
 inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname);
 inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts);
-inline void render(GLFWwindow* window, const ost::Shader& levelShader, const ost::Shader& spriteShader, const ost::Shader& cheeseShader);
+inline void render(GLFWwindow* window, const Shader::Shader& levelShader, const Shader::Shader& spriteShader, const Shader::Shader& cheeseShader);
 
 
 int main(int argc, char* argv[]) {
@@ -69,39 +69,40 @@ int main(int argc, char* argv[]) {
 
 
     LOG_INFO("INIT LEVEL SHADER");
-    ost::Shader levelShader = ost::makeShader_VBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
-    level.bindBufferVertices( getVertexBufferIt(levelShader, level.vertices.size()) );
-    ost::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
-    ost::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
+    Shader::Shader levelShader = Shader::makeVBO(levelShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
+    level.bindBufferVertices( getMesh(levelShader, level.vertices.size()) );
+    Shader::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
+    Shader::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
 
-    ost::setUniformMat4(levelShader, "scale", level.scaleMatrix);
-    ost::setUniformMat4(levelShader, "move", level.moveMatrix);
+    Shader::setUniformMat4(levelShader, "scale", level.scaleMatrix);
+    Shader::setUniformMat4(levelShader, "move", level.moveMatrix);
 
 
     LOG_INFO("INIT SPRITE SHADER");
-    ost::Shader spriteShader = ost::makeShader_VBO_EBO(spriteShaderProgram, 28, 42, GL_STREAM_DRAW, GL_TRIANGLES);
-    ost::Pacman pacman       = ost::Pacman{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),  0, {0.0f, 17.0f}};
-    std::vector<ost::Ghost> ghosts{
-        ost::Ghost{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),   4, {12.0f, 14.0f}},
-        ost::Ghost{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),   8, {10.0f, 14.0f}},
-        ost::Ghost{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),   12, {8.0f, 14.0f}},
-        ost::Ghost{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),   16, {11.0f, 14.0f}},
-        ost::Ghost{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),   20, {11.0f, 14.0f}},
-        ost::Ghost{ getVertexBufferIt(spriteShader, 4), getElementBufferIt(spriteShader, 6),   24, {11.0f, 14.0f}},
-    };
+    Shader::Shader spriteShader = Shader::makeVBO_EBO(spriteShaderProgram, 28, 42, GL_STREAM_DRAW, GL_TRIANGLES);
+   
+    const int rectVertexCount = 4;
+    const int rectElementCount = 6;
+    const int ghostCount = 6;
+    
+    ost::Pacman pacman = ost::Pacman{ getMesh(spriteShader, rectVertexCount, rectElementCount), {0.0f, 17.0f}};
+    std::vector<ost::Ghost> ghosts{};
+    for(int i=0; i<ghostCount; ++i) 
+        ghosts.push_back(ost::Ghost{ getMesh(spriteShader, rectVertexCount, rectElementCount), {11.0f, 14.0f}}); 
 
-    ost::setUniformMat4(spriteShader, "scale", level.scaleMatrix);
-    ost::setUniformMat4(spriteShader, "move", level.moveMatrix);
+    Shader::setUniformMat4(spriteShader, "scale", level.scaleMatrix);
+    Shader::setUniformMat4(spriteShader, "move", level.moveMatrix);
 
 
     LOG_INFO("INIT CHEESE SHADER");
-    ost::Shader cheeseShader = ost::makeShader_VBO(cheeseShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
-    for (auto v : level.vertices) {
-        ost::Cheese cheese = ost::Cheese{ getVertexBufferIt(cheeseShader, 1), v + glm::vec2(0.5f,-0.5f)};
-    }
-    ost::setUniformFloat(cheeseShader, "pointSize", 5.0f);
-    ost::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
-    ost::setUniformMat4(cheeseShader, "move", level.moveMatrix);
+    Shader::Shader cheeseShader = Shader::makeVBO(cheeseShaderProgram, level.vertices.size(), GL_STATIC_DRAW, GL_POINTS);
+    std::vector<ost::Cheese> cheese{};
+    for (const auto v : level.vertices) 
+        cheese.push_back(ost::Cheese{ Shader::getMesh(cheeseShader, 1), v + glm::vec2(0.5f,-0.5f)});
+
+    Shader::setUniformFloat(cheeseShader, "pointSize", 5.0f);
+    Shader::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
+    Shader::setUniformMat4(cheeseShader, "move", level.moveMatrix);
 
 
     //
@@ -221,15 +222,15 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
 
 
 inline void render(GLFWwindow* window,
-                const   ost::Shader& levelShader,
-                const   ost::Shader& spriteShader,
-                const   ost::Shader& cheeseShader) {
+                const   Shader::Shader& levelShader,
+                const   Shader::Shader& spriteShader,
+                const   Shader::Shader& cheeseShader) {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    draw_VBO(levelShader);
-    draw_VBO(cheeseShader);
-    draw_VBO_EBO(spriteShader);
+    Shader::drawVBO(levelShader);
+    Shader::drawVBO(cheeseShader);
+    Shader::drawVBO_EBO(spriteShader);
 
     glfwSwapBuffers(window);
 }

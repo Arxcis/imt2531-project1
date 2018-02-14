@@ -4,16 +4,17 @@
 #include <string>
 
 #include "GLFW/glfw3.h"
-#include "./macro.hpp"
-#include "./logger.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "GL/glew.h"
 
-namespace ost
-{
+#include "./logger.h"
+#include "./spritesheet.hpp"
 
+namespace Mesh { struct Mesh; }
+namespace Shader {
+using  Element = int;    
 struct Vertex
 {
     glm::vec2 position{};
@@ -38,14 +39,43 @@ struct Shader
     GLuint maxElementCount;
 
     std::vector<Vertex> vertexBuffer{};
-    std::size_t         vertexBufferCount{};
-
     std::vector<int>    elementBuffer{};
-    std::size_t         elementBufferCount{};
 };
+inline void   _bindVertexArrayAttributes(Shader& shader);
+inline void   _reserveVBO(Shader& shader);
+inline void   _reserveEBO(Shader& shader);
+inline auto   _makeMeshVBO(Shader& shader, const size_t vertexCount) -> const std::vector<Vertex>::iterator;
+inline auto   _makeMeshEBO(Shader& shader, const size_t elementCount) -> const std::vector<int>::iterator;
 
-inline void
-_bindVertexArrayAttributes(Shader& shader) {
+inline Shader makeVBO(const GLuint program, const GLuint maxVertexCount, const GLenum updateMode, const GLenum drawMode);
+inline Shader makeVBO_EBO(const GLuint program, const GLuint maxVertexCount, const GLuint maxElementCount, const GLenum updateMode, const GLenum drawMode);
+inline void   drawVBO(const Shader& shader);
+inline void   drawVBO_EBO(const Shader& shader);
+
+inline auto   getMesh(Shader& shader, const size_t vertexCount) -> Mesh::Mesh;
+inline auto   getMesh(Shader& shader, const size_t vertexCount, const size_t elementCount) -> Mesh::Mesh;
+inline void   setUniformFloat(const Shader& shader, const std::string uniname, const float univalue);
+inline void   setUniformVec4(const Shader& shader,  const std::string uniname, const glm::vec4 univalue);
+inline void   setUniformMat4(const Shader& shader, const std::string uniname, const glm::mat4 univalue);
+}
+
+namespace Mesh {
+struct Mesh 
+{
+    const std::vector<Shader::Vertex>::iterator VBO;
+    const std::vector<Shader::Element>::iterator EBO;
+    const int VBOindex;
+    const int EBOindex;    
+};
+inline void bindRect(const Mesh& mesh,const glm::vec2 pos,const glm::vec2 size,const ost::Rect uv);
+inline void updateRect(const Mesh& mesh,const glm::vec2 pos,const glm::vec2 size,const ost::Rect uv);
+}
+
+
+namespace Shader {
+
+inline void _bindVertexArrayAttributes(Shader& shader) 
+{
     shader.positionAttribute = glGetAttribLocation(shader.program, "position");
     shader.colorAttribute = glGetAttribLocation(shader.program, "color");
     shader.texcoordAttribute = glGetAttribLocation(shader.program, "texcoord");
@@ -61,8 +91,7 @@ _bindVertexArrayAttributes(Shader& shader) {
     glEnableVertexAttribArray(shader.texcoordAttribute);
 }
 
-inline void
-_reserveVBO(Shader& shader) 
+inline void _reserveVBO(Shader& shader) 
 {
     shader.vertexBuffer.reserve(shader.maxVertexCount);
 
@@ -71,8 +100,7 @@ _reserveVBO(Shader& shader)
     glBufferData(GL_ARRAY_BUFFER, shader.maxVertexCount * sizeof(Vertex), shader.vertexBuffer.data(), shader.updateMode);
 }
 
-inline void
-_reserveEBO(Shader& shader) 
+inline void _reserveEBO(Shader& shader) 
 {
     shader.elementBuffer.reserve(shader.maxElementCount);
 
@@ -81,15 +109,16 @@ _reserveEBO(Shader& shader)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, shader.maxElementCount * sizeof(int), shader.elementBuffer.data(), shader.updateMode);
 }
 
-//
-// @function makeShader_VBO
-//
-inline Shader
-makeShader_VBO(const GLuint program,
-               const GLuint maxVertexCount,
-               const GLenum updateMode, // GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
-               const GLenum drawMode    // GL_POINTS, GL_TRIANGLES
-               )
+/*
+ * @function makeVBO
+ * @param updateMode - GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
+ * @param drawMode -   GL_POINTS, GL_TRIANGLES
+ * @return Shader::Shader
+ */
+inline Shader makeVBO(const GLuint program,
+                      const GLuint maxVertexCount,
+                      const GLenum updateMode, 
+                      const GLenum drawMode)
 {
     Shader shader  = Shader{};
     shader.program = program;
@@ -111,16 +140,17 @@ makeShader_VBO(const GLuint program,
     return shader;
 }
 
-//
-// @function makeShader_VBO_EBO
-//
-inline Shader
-makeShader_VBO_EBO(const GLuint program,
-                   const GLuint maxVertexCount,
-                   const GLuint maxElementCount,
-                   const GLenum updateMode, // GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
-                   const GLenum drawMode    // GL_POINTS, GL_TRIANGLES
-                   )
+/*
+ * @function makeVBO_EBO
+ * @param updateMode - GL_STREAM_DRAW, GL_STATIC_DRAW, GL_DYNAMIC_DRAW
+ * @param drawMode -   GL_POINTS, GL_TRIANGLES
+ * @return Shader::Shader
+ */
+inline Shader makeVBO_EBO(const GLuint program,
+                          const GLuint maxVertexCount,
+                          const GLuint maxElementCount,
+                          const GLenum updateMode, 
+                          const GLenum drawMode)
 {
 
     Shader shader  = Shader{};
@@ -145,10 +175,9 @@ makeShader_VBO_EBO(const GLuint program,
 
 
 //
-// @function draw_VBO
+// @function drawVBO
 //
-inline void
-draw_VBO(const Shader& shader)
+inline void drawVBO(const Shader& shader)
 {
     glUseProgram(shader.program);
     glBindVertexArray(shader.vao);
@@ -163,10 +192,9 @@ draw_VBO(const Shader& shader)
 }
 
 //
-// @function draw_VBO_EBO
+// @function drawVBO_EBO
 //
-inline void
-draw_VBO_EBO(const Shader& shader)
+inline void drawVBO_EBO(const Shader& shader)
 {
     glUseProgram(shader.program);
     glBindVertexArray(shader.vao);
@@ -184,10 +212,9 @@ draw_VBO_EBO(const Shader& shader)
 }
 
 //
-// @function getVertexBufferIt
+// @function _makeMeshVBO
 //
-inline const std::vector<Vertex>::iterator
-getVertexBufferIt(Shader& shader, const size_t vertexCount)
+inline auto _makeMeshVBO(Shader& shader, const size_t vertexCount) -> const std::vector<Vertex>::iterator
 {
     if (vertexCount + shader.vertexBuffer.size() > shader.maxVertexCount ) {
         LOG_ERROR("PREVENTED VERTEX BUFFER OVERFLOW");
@@ -201,10 +228,9 @@ getVertexBufferIt(Shader& shader, const size_t vertexCount)
 }
 
 //
-// @function getElementBufferIt
+// @function _makeMeshEBO
 //
-inline const std::vector<int>::iterator
-getElementBufferIt(Shader& shader, const size_t elementCount)
+inline auto _makeMeshEBO(Shader& shader, const size_t elementCount) -> const std::vector<int>::iterator
 {
     if (elementCount + shader.elementBuffer.size() > shader.maxElementCount ) {
         LOG_ERROR("PREVENTED ELEMENT BUFFER OVERFLOW");
@@ -220,15 +246,43 @@ getElementBufferIt(Shader& shader, const size_t elementCount)
 }
 
 //
+// @function getMesh @overload
+//
+inline auto getMesh(Shader& shader, const size_t vertexCount) -> Mesh::Mesh
+{
+    int _VBOindex = shader.vertexBuffer.size();  
+    return Mesh::Mesh {
+        _makeMeshVBO(shader, vertexCount),
+        {}, // EBO null
+        _VBOindex,
+        -1  // EBO null
+    };
+}
+
+// 
+// @function getMesh @overload
+//
+inline auto getMesh(Shader& shader, const size_t vertexCount, const size_t elementCount) -> Mesh::Mesh
+{   
+    int _VBOindex = shader.vertexBuffer.size();  
+    int _EBOindex = shader.elementBuffer.size();
+    return Mesh::Mesh {
+        _makeMeshVBO(shader, vertexCount),
+        _makeMeshEBO(shader, elementCount),
+        _VBOindex,
+        _EBOindex
+    };
+}
+
+//
 // @function setUniformFloat
 //
-inline void
-setUniformFloat(const Shader& shader, const std::string uniname, const float univalue)
+inline void setUniformFloat(const Shader& shader, const std::string uniname, const float univalue)
 {
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
     if (uniform == -1) {
-        PANIC("UNIFORM == -1");
+        LOG_ERROR("UNIFORM == -1");
     }
     glUniform1f(uniform, univalue);
     glUseProgram(0);
@@ -237,13 +291,12 @@ setUniformFloat(const Shader& shader, const std::string uniname, const float uni
 //
 // @function setUniformVec4
 //
-inline void
-setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 univalue)
+inline void setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 univalue)
 {
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
     if (uniform == -1) {
-        PANIC("UNIFORM == -1");
+        LOG_ERROR("UNIFORM == -1");
     }
     glUniform4fv(uniform, 1, glm::value_ptr(univalue));
     glUseProgram(0);
@@ -252,16 +305,60 @@ setUniformVec4(const Shader& shader, const std::string uniname, const glm::vec4 
 //
 // @function setUniformMat4
 //
-inline void
-setUniformMat4(const Shader& shader, const std::string uniname, const glm::mat4 univalue) {
+inline void setUniformMat4(const Shader& shader, const std::string uniname, const glm::mat4 univalue) {
 
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
     if (uniform == -1) {
-        PANIC("UNIFORM == -1");
+        LOG_ERROR("UNIFORM == -1");
     }
     glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(univalue));
     glUseProgram(0);
 }
 
-} // END NAMESPACE OST
+} // END NAMESPACE SHADER
+
+namespace Mesh {
+    
+inline void bindRect(const Mesh& mesh,
+              const glm::vec2 pos,
+              const glm::vec2 size,
+              const ost::Rect uv) 
+{
+    mesh.VBO[0].position = pos;
+   
+    mesh.VBO[1].position = pos + glm::vec2{ size.x, 0.0f};
+    mesh.VBO[2].position = pos + glm::vec2{ size.x, -size.y };
+    mesh.VBO[3].position = pos + glm::vec2{ 0.0f,   -size.y };
+    
+    mesh.VBO[0].texCoord = uv.topleft;
+    mesh.VBO[1].texCoord = uv.topright;
+    mesh.VBO[2].texCoord = uv.botright;    
+    mesh.VBO[3].texCoord = uv.botleft;
+
+    mesh.EBO[0] = mesh.VBOindex+0;   
+    mesh.EBO[1] = mesh.VBOindex+1;
+    mesh.EBO[2] = mesh.VBOindex+2;
+    mesh.EBO[3] = mesh.VBOindex+2;
+    mesh.EBO[4] = mesh.VBOindex+3;
+    mesh.EBO[5] = mesh.VBOindex+0;
+}
+
+
+inline void updateRect(const Mesh& mesh,
+                const glm::vec2 pos,
+                const glm::vec2 size,
+                const ost::Rect uv) 
+{
+    mesh.VBO[0].position = pos;
+    mesh.VBO[1].position = pos + glm::vec2{ size.x, 0.0f};
+    mesh.VBO[2].position = pos + glm::vec2{ size.x, -size.y };
+    mesh.VBO[3].position = pos + glm::vec2{ 0.0f, -size.y };
+    
+    mesh.VBO[0].texCoord = uv.topleft;
+    mesh.VBO[1].texCoord = uv.topright;
+    mesh.VBO[2].texCoord = uv.botright;    
+    mesh.VBO[3].texCoord = uv.botleft;
+}
+
+} // END NAMESPACE MESH

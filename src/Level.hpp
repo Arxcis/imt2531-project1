@@ -55,11 +55,11 @@ namespace ost
         // BUFFER COMPONENT
         //
 
-        void bindBufferVertices(const std::vector<Vertex>::iterator vertexBufferIterator) const {
-            auto it = vertexBufferIterator;
+        void bindBufferVertices(Mesh::Mesh mesh) const {
+            auto vbo = mesh.VBO;
             for(auto v : vertices) {
-                (*it).position = v;
-                it++;
+                (*vbo).position = v;
+                vbo++;
             }
         }
 
