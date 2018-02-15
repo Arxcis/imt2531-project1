@@ -25,7 +25,6 @@
 #include "./logger.h"
 
 #define LOG_NO_DEBUG 0
-
 //DISCUSSION: using Color = float[4]; instead?
 struct Color {
     float r,g,b,a;
@@ -95,14 +94,14 @@ int main(int argc, char* argv[]) {
         auto   pacmanUV      = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
         auto   ghostUV       = ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f});
 
-        glm::vec2 pacmanStart = {0.0f, 17.0f};
+        glm::vec2 pacmanStart = level.pacmanSpawnTile;
         glm::vec2 ghostStart  = {11.0f, 14.0f};
 
         size_t maxVertex        = 28;
         size_t maxElement       = maxVertex*1.5;
         size_t rectVertexCount  = 4;
         size_t rectElementCount = 6;
-        size_t ghostCount       = 6;
+        size_t ghostCount       = level.ghostSpawnTiles.size();
 
         spriteShader = Shader::makeShader_VBO_EBO_TEX(spriteShaderProgram, pacmanDiffuse, GL_STREAM_DRAW, GL_TRIANGLES, maxVertex, maxElement);
 
@@ -118,7 +117,7 @@ int main(int argc, char* argv[]) {
             auto ghostMesh = getMesh(spriteShader, rectVertexCount, rectElementCount);
             ghosts.push_back(ost::Ghost{
                 ghostMesh,
-                ghostStart,
+                level.ghostSpawnTiles[i],
                 ghostUV
             });
         }
@@ -371,7 +370,7 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     }
     // 4. DELETE CHEESE -
     {
-
+        // for(auto& cheese : ch)
     }
 
     return (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
