@@ -175,7 +175,6 @@ struct Ghost
     }
 };
 
-
 struct Cheese
 {
     Mesh::Mesh mesh;

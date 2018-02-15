@@ -8,42 +8,64 @@
 
 namespace ost
 {
-    using Grid = const std::vector<std::vector<int>>;
 
-    enum TileTypes : int {
-        FLOOR  = 0,
-        WALL   = 1,
-        PORTAL = 2,
-        FOOD   = 3
+    struct Portal {
+        Portal* destination;
+        glm::ivec2 entryDirection;
+        glm::ivec2 tileIndex;
     };
+
+
+    enum TileType : int {
+        FLOOR           = 0b00000000, // 0   //THESE ARE VERY HACKY FLAGS
+        WALL            = 0b00000001, // 1   //AS WE DONT ALLOW ANYTHING ELSE TO APPEAR WITH WALL
+        FOOD            = 0b00000010, // 2
+        SUPERFOOD       = 0b00000011, // 3   //THAT'S WHY WE USE THE WALL-bit FOR OTHER TILE FLAGS AS WELL
+
+        PACMAN_START    = 0b00000100, // 4   //
+        GHOST_START     = 0b00001000, // 8
+
+        //PORTALS  > 16
+        PORTAL_UP       = 0b00010000, //16
+        PORTAL_DOWN     = 0b00100000, //32
+        PORTAL_RIGHT    = 0b00110000, //48
+        PORTAL_LEFT     = 0b01000000 //64
+
+        //ALL BYTES IN FRONT OF PORTAL ie 1 << n for n > 6 will be considered ids of portal pairs
+    };
+    using Grid = const std::vector<std::vector<TileType>>;
+    using PortalPair = std::pair<Portal, Portal>;
 
     using namespace glm;
     struct Level {
 
-        const std::vector<std::vector<int>> grid;
+        const std::vector<std::vector<TileType>> grid;
         const std::vector<vec2> vertices;
-        const ivec2 size;
+        const glm::ivec2 size;
         const int biggestSize;
         const float levelUnit;
         const mat4 scaleMatrix;
         const mat4 moveMatrix;
 
+        glm::ivec2 pacmanSpawnTile;
+        std::vector<glm::ivec2> ghostSpawnTiles;
+        std::vector<PortalPair> portals;
 
-        Level(const std::vector<vec2> _vertices, const ivec2 _size, Grid _grid):
-        vertices(_vertices),
-        size(_size),
-        grid(_grid),
-        biggestSize((_size.x > _size.y) ? _size.x : _size.y),
-        levelUnit(2.0f/(biggestSize)),
-        scaleMatrix(
+        Level(const std::vector<vec2> _vertices, const ivec2 _size, Grid _grid)
+        :vertices(_vertices)
+        ,size(_size)
+        ,grid(_grid)
+        ,biggestSize((_size.x > _size.y) ? _size.x : _size.y)
+        ,levelUnit(2.0f/(biggestSize))
+        ,scaleMatrix(
             mat4(
                 levelUnit,  0,              0,      0,
                 0,          levelUnit,      0,      0,
                 0,          0,              1,      0,
                 0,          0,              0,      1
             )
-        ),
-        moveMatrix(
+        )
+        ,moveMatrix(
             mat4(
                 1,             0,           0,      0,
                 0,             1,           0,      0,
@@ -52,11 +74,30 @@ namespace ost
             )
         )
         {
+            auto tileIndex = glm::ivec2{0,1};
+            for(auto& row : grid) {
+                for(auto& tile : row) {
+                    // LOG_DEBUG("%d", (int)tile);
+                    if((tile & PACMAN_START) == PACMAN_START) {
+                        pacmanSpawnTile = tileIndex;
+                        LOG_DEBUG("Pacman pos set to (%d, %d)", tileIndex.x,tileIndex.y);
+                    }
+                    if((tile & GHOST_START) == GHOST_START) {
+                        ghostSpawnTiles.push_back(tileIndex);
+
+                        LOG_DEBUG("Ghost pos set to (%d, %d)", tileIndex.x,tileIndex.y);
+                    }
+                    tileIndex.x++;
+                }
+                tileIndex.x = 0;
+                tileIndex.y++;
+            }
+
         }
+
         //
         // BUFFER COMPONENT
         //
-
         void bindBufferVertices(Mesh::Mesh mesh) const {
             auto vbo = mesh.VBO;
             auto vboindex = mesh.VBOindex;
@@ -66,7 +107,7 @@ namespace ost
             }
         }
 
-        // static glm::ivec2 getIndexForTileOfType(const Grid& grid, TileTypes tileType) {
+        // static glm::ivec2 getIndexForTileOfType(const Grid& grid, TileType tileType) {
         //
         // }
 
