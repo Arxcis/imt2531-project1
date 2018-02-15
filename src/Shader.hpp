@@ -62,8 +62,8 @@ inline void   _newElements(Shader& shader, const size_t elementCount);
 inline Shader makeShader_VBO(const GLuint program, const GLenum updateMode, const GLenum drawMode);
 inline Shader makeShader_VBO_EBO_TEX(const GLuint program, const GLuint diffuse, const GLenum updateMode, const GLenum drawMode);
 
-inline void initBuffers_VBO(Shader& shader);
-inline void initBuffers_VBO_EBO_TEX(Shader& shader);
+inline void   initBuffers_VBO(Shader& shader);
+inline void   initBuffers_VBO_EBO_TEX(Shader& shader);
 inline void   drawVBO(const Shader& shader);
 inline void   drawVBO_EBO_TEX(const Shader& shader);
 
@@ -92,7 +92,10 @@ struct Mesh
 
 inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n);
 inline void bindPoint(const Mesh& mesh, const glm::vec2 pos);
-inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n);
+
+inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const std::vector<ost::Rect>& uv, std::string text, float margin, glm::vec4 color);
+inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect& uv, const size_t n);
+inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color);
 
 }
 
@@ -425,8 +428,38 @@ inline void bindPoint(const Mesh& mesh, const glm::vec2 pos)
     mesh.VBObegin[0].position = pos;
 }
 
+inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const std::vector<ost::Rect>& uv, std::string text, float margin, glm::vec4 color) 
+{
+        size_t i = 0;
+        for(auto t: text) {
 
-inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n) 
+            auto offsetVBO = i * 4;
+
+            mesh.VBObegin[ offsetVBO + 0].color = color;
+            mesh.VBObegin[ offsetVBO + 1].color = color;
+            mesh.VBObegin[ offsetVBO + 2].color = color;
+            mesh.VBObegin[ offsetVBO + 3].color = color;
+
+            bindRect(mesh, pos + (glm::vec2{size.x + margin, 0} * float(i)), size, uv[t], i);
+            ++i;
+        }
+}
+
+
+inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color) 
+{
+    size_t n = 0;
+    for (auto t: text) {
+        auto offsetVBO = n * 4;
+        mesh.VBObegin[ offsetVBO + 0].color = color;
+        mesh.VBObegin[ offsetVBO + 1].color = color;
+        mesh.VBObegin[ offsetVBO + 2].color = color;
+        mesh.VBObegin[ offsetVBO + 3].color = color;
+        ++n;
+    }
+}
+
+inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect& uv, const size_t n) 
 {
     auto offsetVBO = n * 4;
 

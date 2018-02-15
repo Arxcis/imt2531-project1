@@ -52,6 +52,9 @@ inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader:
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 
+ost::UserInterface userInterface;
+
+
 int main(int argc, char* argv[]) {
 
     const int OPENGL_MAJOR = 4;
@@ -94,8 +97,6 @@ int main(int argc, char* argv[]) {
         glm::vec2 pacmanStart = {0.0f, 17.0f};
         glm::vec2 ghostStart  = {11.0f, 14.0f};
 
-        size_t maxVertex        = 28;
-        size_t maxElement       = maxVertex*1.5;
         size_t rectVertexCount  = 4;
         size_t rectElementCount = 6;
         size_t ghostCount       = 6;
@@ -145,15 +146,7 @@ int main(int argc, char* argv[]) {
         
     LOG_INFO("INIT FONT SHADER");
     Shader::Shader fontShader;
-    std::vector<ost::Text> text;
     {
-
-        std::string txt_score   = "Score: 00";
-        std::string txt_lives   = "Lives: 03";
-        std::string txt_pause   = "----     PAUSE     ----";
-        std::string txt_quit    = "         RESUME        ";
-        std::string txt_continue= "----     QUIT      ----";
-
         fontShader = Shader::makeShader_VBO_EBO_TEX(fontShaderProgram, fontDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);    
             
         auto makeText = [&](std::string text, glm::vec2 textPos){
@@ -172,14 +165,22 @@ int main(int argc, char* argv[]) {
             };
         };
 
-        text.reserve(5);
-        text.push_back(   makeText( txt_score,   glm::vec2{ 16,32}  )   );
-        text.push_back(   makeText( txt_lives,   glm::vec2{ 1, 32}  )   );
+        std::string txt_score   = "Score: 00";
+        std::string txt_lives   = "Lives: 03";
+        std::string txt_pause   = "----    PAUSE     ----";
+        std::string txt_quit    = "        RESUME        ";
+        std::string txt_continue= "----    QUIT      ----";
 
-        text.push_back(   makeText( txt_pause,   glm::vec2{ 0, 19}  )   );
-        text.push_back(   makeText( txt_quit ,   glm::vec2{ 0, 17}  )   );
-        text.push_back(   makeText( txt_continue,glm::vec2{ 0, 16}  )   );
+        std::vector<ost::Text> textElements;
+        textElements.resize(5);
 
+        textElements[ost::UI_SCORE]      =  makeText( txt_score,   glm::vec2{ 16,32}  );
+        textElements[ost::UI_LIVES]      =  makeText( txt_lives,   glm::vec2{ 1, 32}  );
+        textElements[ost::UI_MENU_ITEM1] =  makeText( txt_pause,   glm::vec2{ 0, 19}  );
+        textElements[ost::UI_MENU_ITEM2] =  makeText( txt_quit ,   glm::vec2{ 0, 17}  );
+        textElements[ost::UI_MENU_ITEM3] =  makeText( txt_continue,glm::vec2{ 0, 16}  );
+
+        userInterface = ost::UserInterface{ textElements };
     }
 
     //
@@ -213,17 +214,24 @@ int main(int argc, char* argv[]) {
     //
     auto startPause = [&](){
         double pausetime = glfwGetTime();
-        while(ost::pause) {
+        
+        userInterface.showMenu();
+        
+        while (ost::pause) {
             glfwPollEvents();
-            renderPause(window, levelShader, spriteShader, cheeseShader, fontShader);
+            render(window, levelShader, spriteShader, cheeseShader, fontShader);
             if (( glfwWindowShouldClose(window) || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)) break;
         }
+        
+        userInterface.hideMenu();
+        
         glfwSetTime(pausetime);
     };
     //
     // GAMELOOP
     //
     while (ost::running) {
+
 
         ost::running = update(window, pacman, level, ghosts);
         render(window, levelShader, spriteShader, cheeseShader, fontShader);
@@ -244,18 +252,44 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 
     key = (action==GLFW_PRESS)?key:0;
+    LOG_INFO("key: %d  scancode: %d  action: %d   mods: %d", key, scancode, action, mods);
 
     switch(key)
     {
         case GLFW_KEY_SPACE:{
-    LOG_DEBUG("key: %d  scancode: %d  action: %d   mods: %d", key, scancode, action, mods);
-
             ost::pause = (ost::pause)? 0:1;
             break;
         }
         case GLFW_KEY_ESCAPE:
             ost::running = false;
+            ost::pause   = false;
             break;
+
+        case GLFW_KEY_UP:
+            userInterface.menuUp();
+            break;
+
+        case GLFW_KEY_DOWN:
+            userInterface.menuDown();
+            break;
+
+        case GLFW_KEY_ENTER: {
+
+            if (userInterface.menuIndex == ost::UI_MENU_ITEM_START) {
+                ost::running = true;
+                ost::pause = false;
+    LOG_INFO("RESUMING GAME");
+                
+            }
+            else if (userInterface.menuIndex == ost::UI_MENU_ITEM_QUIT) {
+                ost::running = false;
+                ost::pause = false;
+    LOG_INFO("QUITTING GAME");
+               
+            }
+            break;
+        }
+
     }
 
 }
@@ -377,17 +411,6 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
 
 
 inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader)
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    Shader::drawVBO(levelShader);
-    Shader::drawVBO(cheeseShader);
-    Shader::drawVBO_EBO_TEX(spriteShader);
-
-    glfwSwapBuffers(window);
-}
-
-inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
