@@ -66,7 +66,11 @@ namespace ost
             }
         }
 
-        static bool canWalkToward(const Grid& grid, glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction) 
+        // static glm::ivec2 getIndexForTileOfType(const Grid& grid, TileTypes tileType) {
+        //
+        // }
+
+        static bool canWalkToward(const Grid& grid, glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction)
         {
             const auto center = Level::getCenterPosition(coordinate, size);
             const auto gridIndex = glm::ivec2{center.x, center.y};
@@ -78,12 +82,12 @@ namespace ost
             if (wantTile == ost::WALL) {
                 if (Level::isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center)) {
                     return false;
-                } 
-            } 
+                }
+            }
             return true;
         }
 
-        static bool canChangeDirection(const Grid& grid, glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction, glm::ivec2 wantedDirection) 
+        static bool canChangeDirection(const Grid& grid, glm::vec2 coordinate, glm::vec2 size, glm::ivec2 direction, glm::ivec2 wantedDirection)
         {
             const auto center = Level::getCenterPosition(coordinate, size);
             const auto gridIndex = glm::ivec2{center.x, center.y};
@@ -91,23 +95,28 @@ namespace ost
             if (!canWalkToward(grid, coordinate, size, wantedDirection)) {
                 return false;
             }
-            
+
             return (Level::isCloseEnoughToTheMiddleOfTile(direction, gridIndex, center));
         }
 
 
-        static glm::vec2 getCenterPosition(glm::vec2 coordinate, glm::vec2 size) 
+        static glm::vec2 getCenterPosition(glm::vec2 coordinate, glm::vec2 size)
         {
-            return glm::vec2{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};   
+            return glm::vec2{coordinate.x+(size.x*0.5f), coordinate.y-(size.y*0.5f)};
         }
 
-        static glm::vec2 getTileSnapPosition(glm::vec2 coordinate, glm::vec2 size) 
+        static glm::vec2 getTileSnapPosition(glm::vec2 coordinate, glm::vec2 size)
         {
-            const auto center = getCenterPosition(coordinate, size);            
+            const auto center = getCenterPosition(coordinate, size);
             return glm::vec2{ int(center.x), int(center.y)+1 };
         }
 
-        static bool isCloseEnoughToTheMiddleOfTile(const glm::ivec2 direction, const glm::ivec2 gridIndex, const glm::vec2 center) 
+        //isInSameTile - used to check if two objects are in the same tile, useful for Entity Collision
+        static bool isInSameTile(const glm::vec2 aCoord, const glm::vec2 aSize, const glm::vec2 bCoord, const glm::vec2 bSize) {
+            return glm::ivec2{Level::getCenterPosition(aCoord, aSize)} == glm::ivec2{Level::getCenterPosition(bCoord, bSize)};
+        }
+
+        static bool isCloseEnoughToTheMiddleOfTile(const glm::ivec2 direction, const glm::ivec2 gridIndex, const glm::vec2 center)
         {
             const float margin = 0.4f;
 
@@ -117,19 +126,19 @@ namespace ost
             }
 
             if( direction.y == 0 && direction.x == 0){
-                LOG_ERROR("ENTITY does not have any direction. Undefined behaviour!");                
+                LOG_ERROR("ENTITY does not have any direction. Undefined behaviour!");
             }
 #endif
 
             if (direction.x) {
-                // LOG_DEBUG("(center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin) %d\n", (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin));                
+                // LOG_DEBUG("(center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin) %d\n", (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin));
                 return abs(center.x - (gridIndex.x+0.5)) < 0.1;
             } else {
                // LOG_DEBUG("(center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin) %d\n", (center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin));
                 return abs(center.y - (gridIndex.y+0.5) < 0.1);
             }
 
-            LOG_ERROR("HOW DA FUCK DID YOU GET ALL THE WAY HERE !??????? ");            
+            LOG_ERROR("HOW DA FUCK DID YOU GET ALL THE WAY HERE !??????? ");
         }
     };
 }

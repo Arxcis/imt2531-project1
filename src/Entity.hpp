@@ -13,10 +13,10 @@ const auto vecDown  = glm::ivec2(0,-1);
 const auto vecRight = glm::ivec2(1, 0);
 const auto vecLeft  = glm::ivec2(-1,0);
 
-inline int getNextAnimationFrame(const int currentFrame, const glm::ivec2 direction, const int FRAME_UP,const int FRAME_DOWN, const int FRAME_LEFT, const int FRAME_RIGHT, const int framesPerDirection) 
-{    
+inline int getNextAnimationFrame(const int currentFrame, const glm::ivec2 direction, const int FRAME_UP,const int FRAME_DOWN, const int FRAME_LEFT, const int FRAME_RIGHT, const int framesPerDirection)
+{
     int offset = currentFrame % framesPerDirection;
-    
+
     if (offset == 0) {
         offset = framesPerDirection-1;
     } else {
@@ -37,7 +37,7 @@ inline int getNextAnimationFrame(const int currentFrame, const glm::ivec2 direct
     }
 };
 
-struct Pacman 
+struct Pacman
 {
     enum PacmanFrame : int {
         PACMAN_DOWN0,  PACMAN_DOWN1, PACMAN_DOWN2, PACMAN_DOWN3,
@@ -45,7 +45,7 @@ struct Pacman
         PACMAN_LEFT0,  PACMAN_LEFT1, PACMAN_LEFT2, PACMAN_LEFT3,
         PACMAN_RIGHT0, PACMAN_RIGHT1, PACMAN_RIGHT2, PACMAN_RIGHT3,
     };
-    
+
     Mesh::Mesh             mesh;
     glm::vec2              pos;
     std::vector<ost::Rect> uv;
@@ -55,11 +55,13 @@ struct Pacman
     int          animationFrame = PACMAN_RIGHT3;
     glm::ivec2        direction = { 1, 0 };
     double       nextUpdateTime = 0.0;
-    
+    double       invincibleTime = 0.0;
+    int                   lives = 3;
+
     Pacman() = default;
     Pacman& operator=(const Pacman& other) = default;
 
-    Pacman(Mesh::Mesh _mesh, const glm::vec2 _pos, std::vector<ost::Rect> _uv) 
+    Pacman(Mesh::Mesh _mesh, const glm::vec2 _pos, std::vector<ost::Rect> _uv)
     :mesh(_mesh)
     ,pos(_pos)
     ,uv(_uv)
@@ -67,24 +69,35 @@ struct Pacman
         Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0);
     }
 
+    void damage() {
+        if(invincibleTime > 0)
+            return;
+        lives--;
+        LOG_DEBUG("Pacman.health--");
+        invincibleTime = 2.0; //MAGIC NUMBER
+    }
+
+    void tickInvincibility(const double dt) {
+        invincibleTime -= dt;
+    }
+
     void move(const float dt, const Grid& grid) {
         if (Level::canWalkToward(grid, pos, size, direction))
             pos += glm::vec2{direction} * dt * speed;
-            
     }
 
     void towards(const glm::ivec2 _wantedDirection, const Grid& grid) {
-        
+
         if (_wantedDirection != direction) {
             if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
-                direction = _wantedDirection;  
-                
+                direction = _wantedDirection;
+
                 pos = Level::getTileSnapPosition(pos, size);
             }
         }
     }
 
-    void animate(const double gameTime) 
+    void animate(const double gameTime)
     {
         const double  timeStep = .1;
         if (gameTime > nextUpdateTime) {
@@ -95,7 +108,7 @@ struct Pacman
     }
 };
 
-struct Ghost 
+struct Ghost
 {
     enum GhostFrame : int {
         GHOST_DOWN0,  GHOST_DOWN1,
@@ -113,52 +126,62 @@ struct Ghost
     int           animationFrame = GHOST_DOWN0;
     glm::ivec2         direction = { 1, 0};
     double        nextUpdateTime = 0.0;
-    
+    bool        onAttackCooldown = false;
 
-    Ghost() = default;    
+    Ghost() = default;
     Ghost& operator=(const Ghost& other) = default;
-    Ghost(Mesh::Mesh _mesh, glm::vec2 _pos, std::vector<ost::Rect> _uv) 
+    Ghost(Mesh::Mesh _mesh, glm::vec2 _pos, std::vector<ost::Rect> _uv)
     :mesh(_mesh)
     ,pos(_pos)
     ,uv(_uv)
     { Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0); }
 
-    void move(const float dt, const Grid& grid) 
+    void move(const float dt, const Grid& grid)
     {
         if (Level::canWalkToward(grid, pos, size, direction))
             pos += glm::vec2{direction} * dt * speed;
-            
     }
 
-    void towards(const glm::ivec2 _wantedDirection, const Grid& grid) 
-    {    
+    void attackCheck(Pacman& pacman) {
+        if(Level::isInSameTile(pacman.pos, pacman.size, pos, size)) {
+            if(!onAttackCooldown) {
+                onAttackCooldown = true;
+                pacman.damage();
+            }
+        } else {
+            onAttackCooldown = false;
+        }
+    }
+
+    void towards(const glm::ivec2 _wantedDirection, const Grid& grid)
+    {
         if (_wantedDirection != direction) {
             if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
-                direction = _wantedDirection;  
+                direction = _wantedDirection;
                 pos = Level::getTileSnapPosition(pos, size);
             }
         }
     }
 
-    void animate(const double gameTime) 
-    { 
+    void animate(const double gameTime)
+    {
         const double  timeStep = .1;
         if (gameTime > nextUpdateTime) {
             nextUpdateTime += timeStep;
             animationFrame = getNextAnimationFrame(animationFrame, direction, GHOST_UP0, GHOST_DOWN0, GHOST_LEFT0, GHOST_RIGHT0, 2);
-            
-            Mesh::updateRect(mesh, pos, size, uv[animationFrame], 0);            
+
+            Mesh::updateRect(mesh, pos, size, uv[animationFrame], 0);
         }
     }
 };
 
 
-struct Cheese 
+struct Cheese
 {
     Mesh::Mesh mesh;
     glm::vec2 pos;
 
-    Cheese(Mesh::Mesh _mesh, glm::vec2 _pos) 
+    Cheese(Mesh::Mesh _mesh, glm::vec2 _pos)
     :mesh(_mesh)
     ,pos(_pos)
     {
@@ -166,7 +189,7 @@ struct Cheese
     }
 };
 
-struct Text 
+struct Text
 {
     Mesh::Mesh             mesh;
     glm::vec2              pos;
@@ -174,7 +197,7 @@ struct Text
     std::string            text;
     glm::vec2              size  = { 1.0f, 1.0f };
 
-    Text() = default;    
+    Text() = default;
     Text& operator=(const Text& other) = default;
 
     Text(Mesh::Mesh _mesh, glm::vec2 _pos, glm::vec2 _size, std::vector<ost::Rect> _uv, std::string _text)
@@ -187,7 +210,7 @@ struct Text
         print();
     }
 
-    void print() 
+    void print()
     {
         auto step = glm::vec2{0.1, 0};
         auto letterPosition = pos;
