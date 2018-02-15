@@ -61,7 +61,6 @@ int main(int argc, char* argv[]) {
     const int  WIN_HEIGHT  = 500;
 
     auto window = init_GLFW_GLEW_OPENGL(OPENGL_MAJOR, OPENGL_MINOR, WIN_WIDTH, WIN_HEIGHT, WIN_NAME);
-    
 
 
     LOG_INFO("LOADING FILES");    
@@ -84,7 +83,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    LOG_INFO("INIT SPRITE SHADER"); 
+    LOG_INFO("INIT SPRITE SHADER");
     Shader::Shader          spriteShader;
     ost::Pacman             pacman;
     std::vector<ost::Ghost> ghosts;
@@ -109,7 +108,7 @@ int main(int argc, char* argv[]) {
             pacmanStart, 
             pacmanUV
         };
-        
+
         for (size_t i = 0; i < ghostCount; ++i) {
 
             auto ghostMesh = newMesh(spriteShader, rectVertexCount, rectElementCount);
@@ -117,7 +116,7 @@ int main(int argc, char* argv[]) {
                 ghostMesh, 
                 ghostStart, 
                 ghostUV
-            }); 
+            });
         }
     }
 
@@ -147,7 +146,7 @@ int main(int argc, char* argv[]) {
     LOG_INFO("INIT FONT SHADER");
     Shader::Shader fontShader;
     std::vector<ost::Text> text;
-    {   
+    {
         auto   textUV      = ost::makeSpriteUVCoordinates(16,16, 128, {0, 0}, {511, 511}, {511, 511});
 
         std::string txt_score  = "Score: 00";
@@ -225,7 +224,7 @@ int main(int argc, char* argv[]) {
     // GAMELOOP
     //
     while (ost::running) {
-        
+
         ost::running = update(window, pacman, level, ghosts);
         render(window, levelShader, spriteShader, cheeseShader, fontShader);
 
@@ -242,15 +241,15 @@ int main(int argc, char* argv[]) {
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{   
+{
 
     key = (action==GLFW_PRESS)?key:0;
 
-    switch(key) 
+    switch(key)
     {
         case GLFW_KEY_SPACE:{
     LOG_DEBUG("key: %d  scancode: %d  action: %d   mods: %d", key, scancode, action, mods);
-            
+
             ost::pause = (ost::pause)? 0:1;
             break;
         }
@@ -258,10 +257,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             ost::running = false;
             break;
     }
-        
+
 }
 
-inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname) 
+inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname)
 {
     // init G L F W
     if (!glfwInit()){
@@ -298,7 +297,7 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
         using namespace ost::color;
         glEnable(GL_PROGRAM_POINT_SIZE);
         glClearColor(BACKGROUND.r,BACKGROUND.g,BACKGROUND.b,BACKGROUND.a);
-        
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
@@ -307,7 +306,7 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
 }
 
 
-inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts) 
+inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts)
 {
 
 
@@ -324,6 +323,7 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     {
         pacman.move(deltaTime, level.grid);
         pacman.animate(baseTime);
+        pacman.tickInvincibility(deltaTime);
 
         if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)   {
             pacman.towards(ost::vecUp, level.grid);
@@ -339,10 +339,11 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
         }
     }
     // 2. MOVE GHOSTS
-    {   
+    {
         for(auto& g : ghosts) {
             g.move(deltaTime, level.grid);
             g.animate(baseTime);
+            g.attackCheck(pacman);
         }
 
         const  double step = 0.08;
@@ -351,16 +352,16 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
         if (glfwGetTime() > randomEventLimit) {
             int x = (rand() % 2) ? 0 : 1;  // Random x is 0 or 1
             int y = 0;
-            if (x) 
+            if (x)
                 x = (rand() % 2)? x*-1: x;  // If x is 1, random 1 or -1
             else {
                 y = 1;                     // if x is 0, y = 1
                 y = (rand() %2)? y*-1:y;   // random y is 1 or -1
             }
 
-            ghosts[rand() % ghosts.size()].towards(glm::ivec2{x, y}, level.grid);     
+            ghosts[rand() % ghosts.size()].towards(glm::ivec2{x, y}, level.grid);
             randomEventLimit += step;
-        }    
+        }
     }
     // 3. INCREMENT HIGH SCORE
     {
@@ -375,10 +376,10 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
 }
 
 
-inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader) 
+inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
     Shader::drawVBO(levelShader);
     Shader::drawVBO(cheeseShader);
     Shader::drawVBO_EBO_TEX(spriteShader);
@@ -386,10 +387,10 @@ inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shad
     glfwSwapBuffers(window);
 }
 
-inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader) 
+inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
     Shader::drawVBO(levelShader);
     Shader::drawVBO(cheeseShader);
     Shader::drawVBO_EBO_TEX(spriteShader);
@@ -397,4 +398,3 @@ inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader:
 
     glfwSwapBuffers(window);
 }
-
