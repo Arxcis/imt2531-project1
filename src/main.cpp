@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
 
         size_t rectVertexCount  = 4;
         size_t rectElementCount = 6;
-        size_t ghostCount       = level.ghostSpawnTiles;
+        size_t ghostCount       = level.ghostSpawnTiles.size();
 
         spriteShader = Shader::makeShader_VBO_EBO_TEX(spriteShaderProgram, pacmanDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);
 
