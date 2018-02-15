@@ -192,7 +192,7 @@ struct Text
         auto step = glm::vec2{0.1, 0};
         auto letterPosition = pos;
         size_t i = 0;
-        const float margin = 0.03f;
+        const float margin = 0.01f;
 
         for(auto t: text) {
             Mesh::bindRect(mesh, pos+(glm::vec2{size.x+margin, 0}*float(i)), size, uv[t], i);

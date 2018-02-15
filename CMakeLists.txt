@@ -1,9 +1,11 @@
 
-#CMAKE FOR GLFW GLEW
+#
+# COMPILE USING c++ 2014
+#
 cmake_minimum_required (VERSION 3.1)
-
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 if(SRC)
   get_filename_component(projectname ${SRC} NAME_WE)
@@ -43,6 +45,9 @@ if(WINDOWS)
 link_directories(${PROJECT_SOURCE_DIR}/glew/lib/)
 endif(WINDOWS)
 
+#
+# WHATTA FAKK?
+#
 if(SRC)
   get_filename_component(target ${SRC} NAME_WE)
   add_executable(${target} ${SRC} )
@@ -69,6 +74,10 @@ else()
 endif()
 #file (GLOB         PROJECT_DLL dll/glew32.dll)
 
+
+#
+# INCLUDE DIRECTORIES
+# 
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include/)
@@ -79,7 +88,6 @@ include_directories(${PROJECT_SOURCE_DIR}/glew/include/)
 
 if(WINDOWS)
 include_directories(${PROJECT_SOURCE_DIR}/glew/include/)
-
 file(COPY  ${PROJECT_SOURCE_DIR}/dll/glew32.dll DESTINATION ${PROJECT_BINARY_DIR})
 endif(WINDOWS)
 
@@ -87,7 +95,21 @@ if(APPLE)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${GLEW_INCLUDE_DIRS}")
 endif(APPLE)
 
-set (CMAKE_CXX_STANDARD 14)
+
+
+#
+# SET DEFAULT BUILD TYPE
+#
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
+
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+set(CMAKE_CXX_FLAGS "-Wall")
+#set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
 
 
 get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)

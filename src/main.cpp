@@ -38,11 +38,17 @@ const Color FLOOR  = {1.0f, .7f, .8f, 1.0f};
 const Color SCORE  = {.3f, .9f, .3f, 1.0f};
 const Color CHEESE = {.3f, .9f, .3f, 1.0f};
 }
+
+bool pause = false;
+bool running = false;
+
 }
 
 inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname);
 inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts);
 inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader);
+inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 
 int main(int argc, char* argv[]) {
@@ -154,39 +160,71 @@ int main(int argc, char* argv[]) {
         
     LOG_INFO("INIT FONT SHADER");
     Shader::Shader fontShader;
-    ost::Text text;
+    std::vector<ost::Text> text;
     {   
         auto   textUV      = ost::makeSpriteUVCoordinates(16,16, 128, {0, 0}, {511, 511}, {511, 511});
         GLuint fontDiffuse = ost::loadTexture("./textures/font512.png");
 
-        std::string textString = "HELLO PACMAN";
+        std::string txt_pause  = "-------- PAUSE -------";
+        std::string txt_quit   = "  Q or ESC - Quit";
+        std::string txt_space  = "  Space to continue";
 
         size_t letterVertexCount  = 4;
         size_t letterElementCount = 6;
-        size_t letterCount = textString.size();
+        size_t letterCount = txt_pause.size() + txt_quit.size() + txt_space.size();
         size_t maxVertex   = letterCount * letterVertexCount;
         size_t maxElement  = letterCount * letterElementCount;
-        auto   textPos     = glm::vec2{ 2, 17};
-        auto   textSize    = glm::vec2{ 2 ,2};
+        auto   textSize    = glm::vec2{ 1.2 , 1.2};
 
         fontShader = Shader::makeShader_VBO_EBO_TEX(fontShaderProgram, fontDiffuse, GL_STREAM_DRAW, GL_TRIANGLES, maxVertex, maxElement);    
             
-        auto textMesh = Shader::getMesh(fontShader, letterVertexCount * textString.size(), letterElementCount * textString.size());
-        text = ost::Text{
-            textMesh,
-            textPos,
-            textSize,
-            textUV,
-            textString
-        };
+        text.reserve(3);
+        text.push_back(
+            ost::Text{
+                Shader::getMesh(fontShader, letterVertexCount * txt_pause.size(), letterElementCount * txt_pause.size()),
+                glm::vec2{ 0, 21},
+                textSize,
+                textUV,
+                txt_pause
+            }
+        );
+
+        text.push_back(
+            ost::Text{
+                Shader::getMesh(fontShader, letterVertexCount * txt_quit.size(), letterElementCount * txt_quit.size()),
+                glm::vec2{ 0, 18},
+                textSize,
+                textUV,
+                txt_quit
+            }
+        );
+
+        text.push_back(
+            ost::Text{
+                Shader::getMesh(fontShader, letterVertexCount * txt_space.size(), letterElementCount * txt_space.size()),
+                glm::vec2{ 0, 15},
+                textSize,
+                textUV,
+                txt_space
+            }
+        );
 
         Shader::setUniformMat4(fontShader, "scale", level.scaleMatrix);
         Shader::setUniformMat4(fontShader, "move",  level.moveMatrix);
     }
 
-
-
-
+    //
+    // PAUSE LOOP
+    //
+    auto startPause = [&](){
+        double pausetime = glfwGetTime();
+        while(ost::pause) {
+            glfwPollEvents();
+            renderPause(window, levelShader, spriteShader, cheeseShader, fontShader);
+            if (( glfwWindowShouldClose(window) || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)) break;
+        }
+        glfwSetTime(pausetime);
+    };
     //
     // GAMELOOP
     //
@@ -195,6 +233,8 @@ int main(int argc, char* argv[]) {
         
         running = update(window, pacman, level, ghosts);
         render(window, levelShader, spriteShader, cheeseShader, fontShader);
+
+        if (ost::pause) startPause();
     }
 
     //
@@ -205,6 +245,26 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{   
+
+    key = (action==GLFW_PRESS)?key:0;
+
+    switch(key) 
+    {
+        case GLFW_KEY_SPACE:{
+    LOG_DEBUG("key: %d  scancode: %d  action: %d   mods: %d", key, scancode, action, mods);
+            
+            ost::pause = (ost::pause)? 0:1;
+            break;
+        }
+        case GLFW_KEY_ESCAPE:
+            ost::running = false;
+            break;
+    }
+        
+}
 
 inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname) 
 {
@@ -236,12 +296,16 @@ inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, 
         glfwTerminate();
         PANIC("Failed to initialize GLEW");
     }
+    glfwSetKeyCallback(window, key_callback);
+
     return window;
 }
 
 
 inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts) 
 {
+
+
     glfwPollEvents();
 
     // Configure delta time
@@ -313,7 +377,19 @@ inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shad
     Shader::drawVBO(levelShader);
     Shader::drawVBO(cheeseShader);
     Shader::drawVBO_EBO_TEX(spriteShader);
+
+    glfwSwapBuffers(window);
+}
+
+inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader) 
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    Shader::drawVBO(levelShader);
+    Shader::drawVBO(cheeseShader);
+    Shader::drawVBO_EBO_TEX(spriteShader);
     Shader::drawVBO_EBO_TEX(fontShader);
 
     glfwSwapBuffers(window);
 }
+
