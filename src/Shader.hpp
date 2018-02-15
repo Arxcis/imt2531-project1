@@ -411,12 +411,12 @@ inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size
     mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;    
     mesh.VBObegin[offsetVBO + 3].texCoord = uv.botleft;
 
-    mesh.EBObegin[offsetEBO + 0] = mesh.VBOindex + 0;   
-    mesh.EBObegin[offsetEBO + 1] = mesh.VBOindex + 1;
-    mesh.EBObegin[offsetEBO + 2] = mesh.VBOindex + 2;
-    mesh.EBObegin[offsetEBO + 3] = mesh.VBOindex + 2;
-    mesh.EBObegin[offsetEBO + 4] = mesh.VBOindex + 3;
-    mesh.EBObegin[offsetEBO + 5] = mesh.VBOindex + 0;
+    mesh.EBObegin[offsetEBO + 0] = mesh.VBOindex + offsetVBO + 0;   
+    mesh.EBObegin[offsetEBO + 1] = mesh.VBOindex + offsetVBO + 1;
+    mesh.EBObegin[offsetEBO + 2] = mesh.VBOindex + offsetVBO + 2;
+    mesh.EBObegin[offsetEBO + 3] = mesh.VBOindex + offsetVBO + 2;
+    mesh.EBObegin[offsetEBO + 4] = mesh.VBOindex + offsetVBO + 3;
+    mesh.EBObegin[offsetEBO + 5] = mesh.VBOindex + offsetVBO + 0;
 }
 
 

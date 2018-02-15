@@ -147,24 +147,22 @@ int main(int argc, char* argv[]) {
     Shader::Shader fontShader;
     std::vector<ost::Text> text;
     {
-        auto   textUV      = ost::makeSpriteUVCoordinates(16,16, 128, {0, 0}, {511, 511}, {511, 511});
 
-        std::string txt_score  = "Score: 00";
-        std::string txt_lives  = "Lives: 03";
-        std::string txt_pause  = "-------- PAUSE -------";
-        std::string txt_quit   = "  Q or ESC - Quit";
-        std::string txt_space  = "  Space to continue";
-
-        size_t letterVertexCount  = 4;
-        size_t letterElementCount = 6;
-        size_t letterCount = txt_pause.size() + txt_quit.size() + txt_space.size() + txt_score.size() + txt_lives.size();
-        size_t maxVertex   = letterCount * letterVertexCount;
-        size_t maxElement  = letterCount * letterElementCount;
-        auto   textSize    = glm::vec2{ 1.2 , 1.2};
+        std::string txt_score   = "Score: 00";
+        std::string txt_lives   = "Lives: 03";
+        std::string txt_pause   = "----     PAUSE     ----";
+        std::string txt_quit    = "         RESUME        ";
+        std::string txt_continue= "----     QUIT      ----";
 
         fontShader = Shader::makeShader_VBO_EBO_TEX(fontShaderProgram, fontDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);    
             
         auto makeText = [&](std::string text, glm::vec2 textPos){
+
+            const auto   textUV = ost::makeSpriteUVCoordinates(16,16, 128, {0, 0}, {511, 511}, {511, 511});
+            const size_t letterVertexCount  = 4;
+            const size_t letterElementCount = 6;
+            const auto   textSize    = glm::vec2{ 1.2 , 1.2};
+
             return ost::Text{
                 Shader::newMesh(fontShader, letterVertexCount * text.size(), letterElementCount * text.size()),
                 textPos, 
@@ -175,11 +173,13 @@ int main(int argc, char* argv[]) {
         };
 
         text.reserve(5);
-        text.push_back(   makeText( txt_score, glm::vec2{ 15,30}  )   );
-        text.push_back(   makeText( txt_lives, glm::vec2{ 0, 30}  )   );
-        text.push_back(   makeText( txt_pause, glm::vec2{ 0, 21}  )   );
-        text.push_back(   makeText( txt_quit , glm::vec2{ 0, 18}  )   );
-        text.push_back(   makeText( txt_space, glm::vec2{ 0, 15}  )   );
+        text.push_back(   makeText( txt_score,   glm::vec2{ 16,32}  )   );
+        text.push_back(   makeText( txt_lives,   glm::vec2{ 1, 32}  )   );
+
+        text.push_back(   makeText( txt_pause,   glm::vec2{ 0, 19}  )   );
+        text.push_back(   makeText( txt_quit ,   glm::vec2{ 0, 17}  )   );
+        text.push_back(   makeText( txt_continue,glm::vec2{ 0, 16}  )   );
+
     }
 
     //
