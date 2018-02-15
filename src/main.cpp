@@ -39,8 +39,8 @@ const Color SCORE  = {.3f, .9f, .3f, 1.0f};
 const Color CHEESE = {.3f, .9f, .3f, 1.0f};
 }
 
-bool pause = false;
-bool running = false;
+bool pause   = false;
+bool running = true;
 
 }
 
@@ -228,10 +228,9 @@ int main(int argc, char* argv[]) {
     //
     // GAMELOOP
     //
-    bool running = true;
-    while (running) {
+    while (ost::running) {
         
-        running = update(window, pacman, level, ghosts);
+        ost::running = update(window, pacman, level, ghosts);
         render(window, levelShader, spriteShader, cheeseShader, fontShader);
 
         if (ost::pause) startPause();
