@@ -4,6 +4,7 @@
 #include <string>
 #include "GL/glew.h"
 #include "./macro.hpp"
+#include "./logger.h"
 
 namespace ost {
 //
@@ -13,11 +14,12 @@ GLuint loadAndCompileShader(const char* fname, GLenum shaderType) {
     // Load a shader from an external file
     std::vector<char> buffer;
     {
+
         std::ifstream in;
         in.open(fname, std::ios::binary);
 
         if (in.fail()) {
-            PANIC("in.fail() is true");
+            LOG_ERROR("in.fail() is true on file %s", fname);
         }
         // Get the number of bytes stored in this file
         in.seekg(0, std::ios::end);
@@ -53,7 +55,7 @@ GLuint loadAndCompileShader(const char* fname, GLenum shaderType) {
             getchar();
 
             char errormsg[80 + std::strlen(infolog)];
-            snprintf(errormsg, 1024, "%s - %s\n", "The program failed to compile with the error:", infolog); 
+            snprintf(errormsg, 1024, "%s - %s\n", "The program failed to compile with the error:", infolog);
             PANIC(errormsg);
         }
     }

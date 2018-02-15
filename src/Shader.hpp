@@ -14,8 +14,8 @@
 
 namespace Mesh { struct Mesh; }
 namespace Shader {
-    
-using  Element = int;    
+
+using  Element = int;
 struct Vertex
 {
     glm::vec2 position{};
@@ -32,7 +32,7 @@ struct Shader
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
-    
+
     // Texture maps
     GLuint diffuse;
     GLuint normal;
@@ -77,7 +77,7 @@ inline void   setUniformMat4(const Shader& shader, const std::string uniname, co
 
 namespace Mesh {
 
-struct Mesh 
+struct Mesh
 {
     std::vector<Shader::Vertex>::iterator  VBObegin;
     std::vector<Shader::Vertex>::iterator  VBOend;
@@ -96,13 +96,14 @@ inline void bindPoint(const Mesh& mesh, const glm::vec2 pos);
 inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const std::vector<ost::Rect>& uv, std::string text, float margin, glm::vec4 color);
 inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect& uv, const size_t n);
 inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color);
+inline void updateTextUV(const Mesh& mesh, std::string text,std::vector<ost::Rect>& uvs);
 
 }
 
 
 namespace Shader {
 
-inline void _bindVertexArrayAttributes(Shader& shader) 
+inline void _bindVertexArrayAttributes(Shader& shader)
 {
     shader.positionAttribute = glGetAttribLocation(shader.program, "position");
     shader.colorAttribute    = glGetAttribLocation(shader.program, "color");
@@ -117,12 +118,12 @@ inline void _bindVertexArrayAttributes(Shader& shader)
     glEnableVertexAttribArray(shader.colorAttribute);
     glEnableVertexAttribArray(shader.texcoordAttribute);
 
-    LOG_INFO("shader.program: %d, shader.positionAttribute: %d, shader.colorAttribute: %d, shader.texcoordAttribute: %d", shader.program, shader.positionAttribute, shader.colorAttribute, shader.texcoordAttribute)    
+    LOG_INFO("shader.program: %d, shader.positionAttribute: %d, shader.colorAttribute: %d, shader.texcoordAttribute: %d", shader.program, shader.positionAttribute, shader.colorAttribute, shader.texcoordAttribute)
 }
 
-inline void _initVBO(Shader& shader) 
+inline void _initVBO(Shader& shader)
 {
-    glGenBuffers(1, &(shader.vbo));    
+    glGenBuffers(1, &(shader.vbo));
     glBindBuffer(GL_ARRAY_BUFFER, shader.vbo);
 
     glBufferData(GL_ARRAY_BUFFER, shader.vertexBuffer.size() * sizeof(Vertex), shader.vertexBuffer.data(), shader.updateMode);
@@ -130,14 +131,14 @@ inline void _initVBO(Shader& shader)
     LOG_INFO("vao: %d, ebo: %d, vbosize: %zu, updatemode: %d", shader.vao, shader.vbo, shader.vertexBuffer.size(), shader.updateMode);
 }
 
-inline void _initEBO(Shader& shader) 
+inline void _initEBO(Shader& shader)
 {
     glGenBuffers(1, &(shader.ebo));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
 
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, shader.elementBuffer.size() * sizeof(int), shader.elementBuffer.data(), shader.updateMode);
 
-    LOG_INFO("vao: %d, ebo: %d, vbosize: %zu, updatemode: %d", shader.vao, shader.ebo, shader.elementBuffer.size(), shader.updateMode);    
+    LOG_INFO("vao: %d, ebo: %d, vbosize: %zu, updatemode: %d", shader.vao, shader.ebo, shader.elementBuffer.size(), shader.updateMode);
 }
 
 //
@@ -203,15 +204,15 @@ inline Shader makeShader_VBO_EBO_TEX(const GLuint program, const GLuint diffuse,
  * @function initBuffers_VBO
  *  @brief Call this function after all meshes have been allocated, but before you start drawing.
  */
-inline void initBuffers_VBO(Shader& shader) 
+inline void initBuffers_VBO(Shader& shader)
 {
     // "The ordering doesn’t matter as long as you bind the VBO before using glBufferData and glBindVertexArray before you call glVertexAttribPointer." - AND DO EVERYTHING BEFORE YOU do glVertexAttribPointer
     //  @doc http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 12.02.18
 
     glUseProgram(shader.program);
-    
+
     _initVBO(shader);
-    
+
     glGenVertexArrays(1, &(shader.vao));
     glBindVertexArray(shader.vao);
     _bindVertexArrayAttributes(shader);
@@ -226,13 +227,13 @@ inline void initBuffers_VBO(Shader& shader)
  * @function initBuffers_VBO_EBO_TEX
  *  @brief Call this function after all meshes have been allocated, but before you start drawing.
  */
-inline void initBuffers_VBO_EBO_TEX(Shader& shader) 
+inline void initBuffers_VBO_EBO_TEX(Shader& shader)
 {
     glUseProgram(shader.program);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, shader.diffuse);
-    glUniform1i(   glGetUniformLocation(shader.program, "diffuse"),    0);    
+    glUniform1i(   glGetUniformLocation(shader.program, "diffuse"),    0);
 
     _initEBO(shader);
     _initVBO(shader);
@@ -243,7 +244,7 @@ inline void initBuffers_VBO_EBO_TEX(Shader& shader)
 
     LOG_INFO("vao: %d, vbo: %d, ebo: %d", shader.vao, shader.vbo, shader.ebo);
 
-    glBindTexture(GL_TEXTURE_2D, 0);    
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
     glUseProgram(0);
 }
@@ -281,7 +282,7 @@ inline void drawVBO_EBO_TEX(const Shader& shader)
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, shader.ebo);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, shader.elementBuffer.size()*sizeof(int), shader.elementBuffer.data());
-    
+
     glDrawElements(shader.drawMode, shader.elementBuffer.size(), GL_UNSIGNED_INT, 0);
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -292,7 +293,7 @@ inline void drawVBO_EBO_TEX(const Shader& shader)
 //
 // @function newMesh @overload
 //  @brief Allocating only vertices, (not elements), in the VBO.
-//  @ return A Mesh with iterators pointing to the collection of vertices 
+//  @ return A Mesh with iterators pointing to the collection of vertices
 //           generated in the VBO.
 //
 inline auto newMesh(Shader& shader, const size_t vertexCount) -> Mesh::Mesh
@@ -317,15 +318,15 @@ inline auto newMesh(Shader& shader, const size_t vertexCount) -> Mesh::Mesh
 }
 
 
-// 
+//
 // @function newMesh @overload
 //  @brief Allocating requested vertices and elements, in the corresponding VBO and EBO buffers.
 //  @return Returns a Mesh struc, which holds pointers to the location of the allocated vertices
 //          and elements.
 //
 inline auto newMesh(Shader& shader, const size_t vertexCount, const size_t elementCount) -> Mesh::Mesh
-{   
-    size_t VBOindex = shader.vertexBuffer.size(); 
+{
+    size_t VBOindex = shader.vertexBuffer.size();
     auto   VBObegin = shader.vertexBuffer.end();
     size_t EBOindex = shader.elementBuffer.size();
     auto   EBObegin = shader.elementBuffer.end();
@@ -371,7 +372,7 @@ inline void setUniformVec4(const Shader& shader, const std::string uniname, cons
 {
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
-    LOG_INFO("uniform: %d", uniform);    
+    LOG_INFO("uniform: %d", uniform);
     if (uniform == -1) {
         LOG_ERROR("UNIFORM == -1");
     }
@@ -386,7 +387,7 @@ inline void setUniformMat4(const Shader& shader, const std::string uniname, cons
 
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
-    LOG_INFO("uniform: %d", uniform);    
+    LOG_INFO("uniform: %d", uniform);
     if (uniform == -1) {
         LOG_ERROR("UNIFORM == -1");
     }
@@ -397,8 +398,8 @@ inline void setUniformMat4(const Shader& shader, const std::string uniname, cons
 } // END NAMESPACE SHADER
 
 namespace Mesh {
-    
-inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n) 
+
+inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n)
 {
     auto offsetVBO = n * 4;
     auto offsetEBO = n * 6;
@@ -408,13 +409,13 @@ inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size
     mesh.VBObegin[offsetVBO + 1].position = pos + glm::vec2{ size.x, 0.0f};
     mesh.VBObegin[offsetVBO + 2].position = pos + glm::vec2{ size.x, -size.y };
     mesh.VBObegin[offsetVBO + 3].position = pos + glm::vec2{ 0.0f,   -size.y };
-    
+
     mesh.VBObegin[offsetVBO + 0].texCoord = uv.topleft;
     mesh.VBObegin[offsetVBO + 1].texCoord = uv.topright;
-    mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;    
+    mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;
     mesh.VBObegin[offsetVBO + 3].texCoord = uv.botleft;
 
-    mesh.EBObegin[offsetEBO + 0] = mesh.VBOindex + offsetVBO + 0;   
+    mesh.EBObegin[offsetEBO + 0] = mesh.VBOindex + offsetVBO + 0;
     mesh.EBObegin[offsetEBO + 1] = mesh.VBOindex + offsetVBO + 1;
     mesh.EBObegin[offsetEBO + 2] = mesh.VBOindex + offsetVBO + 2;
     mesh.EBObegin[offsetEBO + 3] = mesh.VBOindex + offsetVBO + 2;
@@ -423,12 +424,12 @@ inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size
 }
 
 
-inline void bindPoint(const Mesh& mesh, const glm::vec2 pos) 
+inline void bindPoint(const Mesh& mesh, const glm::vec2 pos)
 {
     mesh.VBObegin[0].position = pos;
 }
 
-inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const std::vector<ost::Rect>& uv, std::string text, float margin, glm::vec4 color) 
+inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const std::vector<ost::Rect>& uv, std::string text, float margin, glm::vec4 color)
 {
         size_t i = 0;
         for(auto t: text) {
@@ -446,7 +447,7 @@ inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size
 }
 
 
-inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color) 
+inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color)
 {
     size_t n = 0;
     for (auto t: text) {
@@ -459,7 +460,20 @@ inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color)
     }
 }
 
-inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect& uv, const size_t n) 
+inline void updateTextUV(const Mesh& mesh, std::string text,std::vector<ost::Rect>& uvs)
+{
+    size_t n = 0;
+    for (auto t: text) {
+        auto offsetVBO = n * 4;
+        mesh.VBObegin[ offsetVBO + 0].texCoord = uvs[t].topleft;
+        mesh.VBObegin[ offsetVBO + 1].texCoord = uvs[t].topright;
+        mesh.VBObegin[ offsetVBO + 2].texCoord = uvs[t].botright;
+        mesh.VBObegin[ offsetVBO + 3].texCoord = uvs[t].botleft;
+        ++n;
+    }
+}
+
+inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect& uv, const size_t n)
 {
     auto offsetVBO = n * 4;
 
@@ -467,10 +481,10 @@ inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 si
     mesh.VBObegin[offsetVBO + 1].position = pos + glm::vec2{ size.x, 0.0f};
     mesh.VBObegin[offsetVBO + 2].position = pos + glm::vec2{ size.x, -size.y };
     mesh.VBObegin[offsetVBO + 3].position = pos + glm::vec2{ 0.0f, -size.y };
-  
+
     mesh.VBObegin[offsetVBO + 0].texCoord = uv.topleft;
     mesh.VBObegin[offsetVBO + 1].texCoord = uv.topright;
-    mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;    
+    mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;
     mesh.VBObegin[offsetVBO + 3].texCoord = uv.botleft;
 }
 

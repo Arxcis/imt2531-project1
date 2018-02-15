@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>  // EXIT_FAILURE, srand, rand
 #include <vector>
+#include <set>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -23,6 +24,7 @@
 #include "./Entity.hpp"
 #include "./spritesheet.hpp"
 #include "./logger.h"
+#include "./Level.hpp"
 //#include "./Primitive.hpp"
 
 #define LOG_NO_DEBUG 0
@@ -45,7 +47,7 @@ bool running = true;
 }
 
 inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname);
-inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts);
+inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts, std::vector<ost::Cheese>& cheeses);
 inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader);
 inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -93,12 +95,13 @@ int main(int argc, char* argv[]) {
         auto   pacmanUV      = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
         auto   ghostUV       = ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f});
 
-        glm::vec2 pacmanStart = level.pacmanSpawnTile;
-        glm::vec2 ghostStart  = {11.0f, 14.0f};
+        glm::ivec2 pacmanStart  = level.pacmanSpawnTile;
+        glm::ivec2* ghostStarts = level.ghostSpawnTiles.data();
 
         size_t rectVertexCount  = 4;
         size_t rectElementCount = 6;
         size_t ghostCount       = level.ghostSpawnTiles.size();
+
 
         spriteShader = Shader::makeShader_VBO_EBO_TEX(spriteShaderProgram, pacmanDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);
 
@@ -114,7 +117,7 @@ int main(int argc, char* argv[]) {
             auto ghostMesh = newMesh(spriteShader, rectVertexCount, rectElementCount);
             ghosts.push_back(ost::Ghost{
                 ghostMesh,
-                level.ghostSpawnTiles[i],
+                ghostStarts[i],
                 ghostUV
             });
         }
@@ -126,7 +129,7 @@ int main(int argc, char* argv[]) {
 
     LOG_INFO("INIT CHEESE SHADER");
     Shader::Shader           cheeseShader;
-    std::vector<ost::Cheese> cheese;
+    std::vector<ost::Cheese> cheeses;
     {
         const glm::vec2 cheeseOffset = glm::vec2(0.5f,-0.5f);
         const size_t    cheeseVertexCount = 1;
@@ -134,7 +137,7 @@ int main(int argc, char* argv[]) {
         cheeseShader = Shader::makeShader_VBO(cheeseShaderProgram, GL_STATIC_DRAW, GL_POINTS);
 
         for (const auto v : level.vertices) {
-            cheese.push_back(ost::Cheese{
+            cheeses.push_back(ost::Cheese{
                 newMesh(cheeseShader, cheeseVertexCount),
                 v + cheeseOffset
             });
@@ -232,7 +235,7 @@ int main(int argc, char* argv[]) {
     while (ost::running) {
 
 
-        ost::running = update(window, pacman, level, ghosts);
+        ost::running = update(window, pacman, level, ghosts, cheeses);
         render(window, levelShader, spriteShader, cheeseShader, fontShader);
 
         if (ost::pause) startPause();
@@ -339,7 +342,7 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
 }
 
 
-inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts)
+inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts, std::vector<ost::Cheese>& cheeses)
 {
 
 
@@ -376,7 +379,9 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
         for(auto& g : ghosts) {
             g.move(deltaTime, level.grid);
             g.animate(baseTime);
-            g.attackCheck(pacman);
+            if(g.tryAttack(pacman)) {
+                pacman.damage();
+            }
         }
 
         const  double step = 0.08;
@@ -398,11 +403,16 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     }
     // 3. INCREMENT HIGH SCORE
     {
-
+        userInterface.setScore(pacman.score);
+        userInterface.setLives(pacman.lives);
     }
     // 4. DELETE CHEESE -
     {
-        // for(auto& cheese : ch)
+        for(auto& cheese : cheeses) {
+            if (cheese.enabled && cheese.tryGetEatenBy(pacman)) {
+                pacman.addScore(1);
+            }
+        }
     }
 
     return (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);

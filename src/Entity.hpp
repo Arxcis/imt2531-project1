@@ -58,6 +58,7 @@ struct Pacman
     double       nextUpdateTime = 0.0;
     double       invincibleTime = 0.0;
     int                   lives = 3;
+    int                   score = 0;
 
     Pacman() = default;
     Pacman& operator=(const Pacman& other) = default;
@@ -70,11 +71,15 @@ struct Pacman
         Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0);
     }
 
+    void addScore(int points) {
+        score += points;
+    }
+
     void damage() {
         if(invincibleTime > 0)
             return;
         lives--;
-        LOG_DEBUG("Pacman.health--");
+        LOG_INFO("Pacman.lives: %d", lives);
         invincibleTime = 2.0; //MAGIC NUMBER
     }
 
@@ -143,15 +148,16 @@ struct Ghost
             pos += glm::vec2{direction} * dt * speed;
     }
 
-    void attackCheck(Pacman& pacman) {
+    bool tryAttack(const Pacman& pacman) {
         if(Level::isInSameTile(pacman.pos, pacman.size, pos, size)) {
             if(!onAttackCooldown) {
                 onAttackCooldown = true;
-                pacman.damage();
+                return true;
             }
         } else {
             onAttackCooldown = false;
         }
+        return false;
     }
 
     void towards(const glm::ivec2 _wantedDirection, const Grid& grid)
@@ -178,14 +184,24 @@ struct Ghost
 
 struct Cheese
 {
-    Mesh::Mesh mesh;
-    glm::vec2 pos;
+    Mesh::Mesh      mesh;
+    glm::vec2       pos;
+    bool            enabled = true;
+    const glm::vec2 size{0.5f,0.5f};
 
     Cheese(Mesh::Mesh _mesh, glm::vec2 _pos)
     :mesh(_mesh)
     ,pos(_pos)
     {
         Mesh::bindPoint(mesh, pos);
+    }
+
+    bool tryGetEatenBy(const Pacman& pacman) {
+        if(Level::isInSameTile(pos, size, pacman.pos, pacman.size)) {
+            enabled = false;
+            return true;
+        }
+        return false;
     }
 };
 
@@ -208,7 +224,7 @@ struct Text
     ,size(_size)
     ,uv(_uv)
     ,text(_text)
-    { 
+    {
         Mesh::bindText(mesh, pos, size, uv, text, margin, color);
     }
 
@@ -216,21 +232,22 @@ struct Text
     {
        // LOG_DEBUG("printing text with color: %.2f, %.2f, %.2f, %.2f,", color.x, color.y, color.z, color.w);
         Mesh::updateTextColor(mesh, text, color);
+        Mesh::updateTextUV(mesh, text, uv);
     }
 
     void setColor(glm::vec4 incolor) {
         color = glm::vec4{incolor.x, incolor.y, incolor.z, color.w};
-    } 
-
-    void hide() { 
-        color = glm::vec4{color.x,color.y,color.z,0}; 
     }
-    void show() { 
-        color = glm::vec4{color.x,color.y,color.z,1}; 
+
+    void hide() {
+        color = glm::vec4{color.x,color.y,color.z,0};
+    }
+    void show() {
+        color = glm::vec4{color.x,color.y,color.z,1};
     }
 };
 
-enum UIElement : int 
+enum UIElement : int
 {
     UI_SCORE,
     UI_LIVES,
@@ -241,7 +258,7 @@ enum UIElement : int
     UI_MENU_ITEM_QUIT =4,
 };
 
-struct UserInterface 
+struct UserInterface
 {
     std::vector<Text> UItext;
     size_t menuIndex = UI_MENU_ITEM2;
@@ -269,8 +286,8 @@ struct UserInterface
         }
     }
 
-    void setScore(size_t score) 
-    {   
+    void setScore(size_t score)
+    {
         UItext[UI_SCORE].text = "Score: 0" + std::to_string(score);
         UItext[UI_SCORE].print();
     }
@@ -281,8 +298,8 @@ struct UserInterface
         UItext[UI_LIVES].print();
     }
 
-    void menuUp() 
-    {   
+    void menuUp()
+    {
         if (menuIndex == UI_MENU_ITEM2)
             return;
 
@@ -296,7 +313,7 @@ struct UserInterface
         UItext[menuIndex].print();
     }
 
-    void menuDown() 
+    void menuDown()
     {
         if(menuIndex == UI_MENU_ITEM3)
             return;
@@ -307,16 +324,16 @@ struct UserInterface
         menuIndex += 1;
         LOG_INFO("menuindex: %zu", menuIndex);
 
-        UItext[menuIndex].setColor(selectColor);        
+        UItext[menuIndex].setColor(selectColor);
         UItext[menuIndex].print();
 
     }
 
-    void showMenu() 
-    {   
+    void showMenu()
+    {
         UItext[menuIndex].setColor(unselectColor);
         UItext[menuIndex].setColor(selectColor);
-                    
+
         UItext[UI_MENU_ITEM1].show();
         UItext[UI_MENU_ITEM2].show();
         UItext[UI_MENU_ITEM3].show();
@@ -324,8 +341,8 @@ struct UserInterface
         refreshText();
     }
 
-    void hideMenu() 
-    {    
+    void hideMenu()
+    {
         UItext[UI_MENU_ITEM1].hide();
         UItext[UI_MENU_ITEM2].hide();
         UItext[UI_MENU_ITEM3].hide();
