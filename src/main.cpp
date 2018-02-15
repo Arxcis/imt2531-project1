@@ -44,7 +44,7 @@ bool running = true;
 
 }
 
-inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname);
+inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname);
 inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts);
 inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader);
 inline void renderPause(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader);
@@ -59,11 +59,8 @@ int main(int argc, char* argv[]) {
     const int  WIN_WIDTH   = 500;
     const int  WIN_HEIGHT  = 500;
 
-    auto window = init_GLFW_GLEW(OPENGL_MAJOR, OPENGL_MINOR, WIN_WIDTH, WIN_HEIGHT, WIN_NAME);
-
-    using namespace ost::color;
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    glClearColor(BACKGROUND.r,BACKGROUND.g,BACKGROUND.b,BACKGROUND.a);
+    auto window = init_GLFW_GLEW_OPENGL(OPENGL_MAJOR, OPENGL_MINOR, WIN_WIDTH, WIN_HEIGHT, WIN_NAME);
+    
 
 
     LOG_INFO("LOADING FILES");    
@@ -265,12 +262,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         
 }
 
-inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname) 
+inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int openglMinor, const int wwidth, const int wheight, const char* wname) 
 {
-    // INITIALIZE G L F W
+    // init G L F W
     if (!glfwInit()){
         glfwTerminate();
-        PANIC("Failed to initialize GLFW");
+        PANIC("Failed to init GLFW");
     }
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -289,13 +286,23 @@ inline GLFWwindow* init_GLFW_GLEW(const int openglMajor, const int openglMinor, 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     glfwSwapInterval(1);
 
-    // INITIALIZE G L E W
+    // init G L E W
     glewExperimental = GL_TRUE;  // MACOS/intel cpu support
     if (glewInit() != GLEW_OK) {
         glfwTerminate();
-        PANIC("Failed to initialize GLEW");
+        PANIC("Failed to init GLEW");
     }
     glfwSetKeyCallback(window, key_callback);
+
+    // INIT OPENGL
+    {
+        using namespace ost::color;
+        glEnable(GL_PROGRAM_POINT_SIZE);
+        glClearColor(BACKGROUND.r,BACKGROUND.g,BACKGROUND.b,BACKGROUND.a);
+        
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
 
     return window;
 }
