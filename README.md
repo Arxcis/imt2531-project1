@@ -26,11 +26,12 @@ optional arguments:
 
 
 ## 2. References
-loadShader files - https://badvertex.com/2012/11/20/how-to-load-a-glsl-shader-in-opengl-using-c.html  - 12.02.18
-glPoints - https://solarianprogrammer.com/2013/05/13/opengl-101-drawing-primitives/ - 12.02.18
+modern opengl youtube tutorial - https://youtu.be/csKrVBWCItc - 15.02.18 <br> 
+loadShader files - https://badvertex.com/2012/11/20/how-to-load-a-glsl-shader-in-opengl-using-c.html  - 12.02.18  <br>
+glPoints - https://solarianprogrammer.com/2013/05/13/opengl-101-drawing-primitives/ - 12.02.18  <br>
 glBufferSubData - https://www.khronos.org/opengl/wiki/Buffer_Object#Data_Specification - 04.02.18 <br>
 Texture/texture-blending tutorial - https://learnopengl.com/Getting-started/Textures 04.02.18 <br>
 Texturing a cube - http://www.opengl-tutorial.org/beginners-tutorials/tutorial-5-a-textured-cube/ - 04.02.18 <br>
 Texture kittens OpenGL tutorial - https://open.gl/textures - 04.02.18 <br>
 Texture sampler GLSL - https://www.khronos.org/opengl/wiki/Sampler_(GLSL)#Binding_textures_to_samplers - 03.02.18 <br>
-VBO's and VAO's  - http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 02.02.18
+VBO's and VAO's  - http://headerphile.com/sdl2/opengl-part-2-vertexes-vbos-and-vaos/ - 02.02.18  <br>
