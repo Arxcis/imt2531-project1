@@ -99,11 +99,11 @@ namespace ost
         // BUFFER COMPONENT
         //
         void bindBufferVertices(Mesh::Mesh mesh) const {
-            auto vbo = mesh.VBO;
+            auto vbo = mesh.VBObegin;
             auto vboindex = mesh.VBOindex;
             for(auto v : vertices) {
-                (*vbo)[vboindex].position = v;
-                vboindex += 1;
+                vbo[0].position = v;
+                vbo += 1;
             }
         }
 

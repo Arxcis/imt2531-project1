@@ -6,6 +6,7 @@
 #include "./Shader.hpp"
 #include "./Level.hpp"
 
+
 namespace ost {
 
 const auto vecUp    = glm::ivec2(0, 1);
@@ -184,7 +185,7 @@ struct Cheese
     :mesh(_mesh)
     ,pos(_pos)
     {
-        (*mesh.VBO)[mesh.VBOindex].position = pos;
+        Mesh::bindPoint(mesh, pos);
     }
 };
 
@@ -195,6 +196,8 @@ struct Text
     std::vector<ost::Rect> uv;
     std::string            text;
     glm::vec2              size  = { 1.0f, 1.0f };
+    glm::vec4              color = {0,0,1,1};
+    float                  margin = 0.1f;
 
     Text() = default;
     Text& operator=(const Text& other) = default;
@@ -205,25 +208,129 @@ struct Text
     ,size(_size)
     ,uv(_uv)
     ,text(_text)
-    {
-        print();
+    { 
+        Mesh::bindText(mesh, pos, size, uv, text, margin, color);
     }
 
     void print()
     {
-        auto step = glm::vec2{0.1, 0};
-        auto letterPosition = pos;
-        size_t i = 0;
-        const float margin = 0.01f;
+       // LOG_DEBUG("printing text with color: %.2f, %.2f, %.2f, %.2f,", color.x, color.y, color.z, color.w);
+        Mesh::updateTextColor(mesh, text, color);
+    }
 
-        for(auto t: text) {
-            Mesh::bindRect(mesh, pos+(glm::vec2{size.x+margin, 0}*float(i)), size, uv[t], i);
-            ++i;
+    void setColor(glm::vec4 incolor) {
+        color = glm::vec4{incolor.x, incolor.y, incolor.z, color.w};
+    } 
+
+    void hide() { 
+        color = glm::vec4{color.x,color.y,color.z,0}; 
+    }
+    void show() { 
+        color = glm::vec4{color.x,color.y,color.z,1}; 
+    }
+};
+
+enum UIElement : int 
+{
+    UI_SCORE,
+    UI_LIVES,
+    UI_MENU_ITEM1=2,
+    UI_MENU_ITEM2=3,
+    UI_MENU_ITEM3=4,
+    UI_MENU_ITEM_START=3,
+    UI_MENU_ITEM_QUIT =4,
+};
+
+struct UserInterface 
+{
+    std::vector<Text> UItext;
+    size_t menuIndex = UI_MENU_ITEM2;
+
+    glm::vec4 unselectColor = {0,0,1,1};
+    glm::vec4 selectColor   = {1,0,0,1};
+
+    UserInterface() = default;
+    UserInterface& operator=(const UserInterface& other) = default;
+
+    UserInterface(std::vector<Text> _uitext)
+    :UItext(_uitext)
+    {
+        // Set the correct positions of all the UIElements
+
+        UItext[UI_MENU_ITEM1].hide();
+        UItext[UI_MENU_ITEM2].hide();
+        UItext[UI_MENU_ITEM3].hide();
+        refreshText();
+    }
+
+    void refreshText() {
+        for(auto text : UItext) {
+            text.print();
         }
     }
 
+    void setScore(size_t score) 
+    {   
+        UItext[UI_SCORE].text = "Score: 0" + std::to_string(score);
+        UItext[UI_SCORE].print();
+    }
 
+    void setLives(size_t liveCount)
+    {
+        UItext[UI_LIVES].text = "Lives: 0" + std::to_string(liveCount);
+        UItext[UI_LIVES].print();
+    }
+
+    void menuUp() 
+    {   
+        if (menuIndex == UI_MENU_ITEM2)
+            return;
+
+        UItext[menuIndex].setColor(unselectColor);
+        UItext[menuIndex].print();
+
+        menuIndex -= 1;
+        LOG_INFO("menuindex: %zu", menuIndex);
+
+        UItext[menuIndex].setColor(selectColor);
+        UItext[menuIndex].print();
+    }
+
+    void menuDown() 
+    {
+        if(menuIndex == UI_MENU_ITEM3)
+            return;
+
+        UItext[menuIndex].setColor(unselectColor);
+        UItext[menuIndex].print();
+
+        menuIndex += 1;
+        LOG_INFO("menuindex: %zu", menuIndex);
+
+        UItext[menuIndex].setColor(selectColor);        
+        UItext[menuIndex].print();
+
+    }
+
+    void showMenu() 
+    {   
+        UItext[menuIndex].setColor(unselectColor);
+        UItext[menuIndex].setColor(selectColor);
+                    
+        UItext[UI_MENU_ITEM1].show();
+        UItext[UI_MENU_ITEM2].show();
+        UItext[UI_MENU_ITEM3].show();
+
+        refreshText();
+    }
+
+    void hideMenu() 
+    {    
+        UItext[UI_MENU_ITEM1].hide();
+        UItext[UI_MENU_ITEM2].hide();
+        UItext[UI_MENU_ITEM3].hide();
+        refreshText();
+    }
 };
-
 
 } // END NAMESPACE OST
