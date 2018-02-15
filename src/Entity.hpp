@@ -162,7 +162,7 @@ struct Cheese
     :mesh(_mesh)
     ,pos(_pos)
     {
-        (*mesh.VBO)[mesh.VBOindex].position = pos;
+        Mesh::bindPoint(mesh, pos);
     }
 };
 
@@ -195,12 +195,10 @@ struct Text
         const float margin = 0.01f;
 
         for(auto t: text) {
-            Mesh::bindRect(mesh, pos+(glm::vec2{size.x+margin, 0}*float(i)), size, uv[t], i);
+            Mesh::bindRect(mesh, pos + (glm::vec2{size.x + margin, 0} * float(i)), size, uv[t], i);
             ++i;
         }
     }
-
-
 };
 
 
