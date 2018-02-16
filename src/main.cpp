@@ -352,8 +352,6 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
 
 inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, std::vector<ost::Ghost>& ghosts)
 {
-
-
     glfwPollEvents();
 
     // Configure delta time
