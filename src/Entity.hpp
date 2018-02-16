@@ -233,35 +233,35 @@ struct Text
 
 enum UIElement : int 
 {
-    UI_SCORE,
-    UI_LIVES,
-    UI_MENU_ITEM1=2,
-    UI_MENU_ITEM2=3,
-    UI_MENU_ITEM3=4,
-    UI_MENU_ITEM_START=3,
-    UI_MENU_ITEM_QUIT =4,
+    UI_SCORE=0,
+    UI_LIVES=1,
+    UI_MENU_ITEM_PAUSE  = 2,
+
+    UI_MENU_ITEM_MIN    = 3,
+    UI_MENU_ITEM_RESUME = 3,
+    UI_MENU_ITEM_RESTART= 4,
+    UI_MENU_ITEM_QUIT   = 5,
+    UI_MENU_ITEM_MAX    = 5,
 };
 
 struct UserInterface 
 {
     std::vector<Text> UItext;
-    size_t menuIndex = UI_MENU_ITEM2;
+    size_t menuIndex = UI_MENU_ITEM_RESUME;
 
     glm::vec4 unselectColor = {0,0,1,1};
     glm::vec4 selectColor   = {1,0,0,1};
 
+
     UserInterface() = default;
     UserInterface& operator=(const UserInterface& other) = default;
+
 
     UserInterface(std::vector<Text> _uitext)
     :UItext(_uitext)
     {
         // Set the correct positions of all the UIElements
-
-        UItext[UI_MENU_ITEM1].hide();
-        UItext[UI_MENU_ITEM2].hide();
-        UItext[UI_MENU_ITEM3].hide();
-        refreshText();
+        hideMenu();
     }
 
     void refreshText() {
@@ -284,7 +284,7 @@ struct UserInterface
 
     void menuUp() 
     {   
-        if (menuIndex == UI_MENU_ITEM2)
+        if (menuIndex == UI_MENU_ITEM_MIN)
             return;
 
         UItext[menuIndex].setColor(unselectColor);
@@ -299,7 +299,7 @@ struct UserInterface
 
     void menuDown() 
     {
-        if(menuIndex == UI_MENU_ITEM3)
+        if(menuIndex == UI_MENU_ITEM_MAX)
             return;
 
         UItext[menuIndex].setColor(unselectColor);
@@ -317,19 +317,21 @@ struct UserInterface
     {   
         UItext[menuIndex].setColor(unselectColor);
         UItext[menuIndex].setColor(selectColor);
-                    
-        UItext[UI_MENU_ITEM1].show();
-        UItext[UI_MENU_ITEM2].show();
-        UItext[UI_MENU_ITEM3].show();
+
+        UItext[UI_MENU_ITEM_PAUSE].show();
+        UItext[UI_MENU_ITEM_RESTART].show();
+        UItext[UI_MENU_ITEM_RESUME].show();
+        UItext[UI_MENU_ITEM_QUIT].show();
 
         refreshText();
     }
 
     void hideMenu() 
     {    
-        UItext[UI_MENU_ITEM1].hide();
-        UItext[UI_MENU_ITEM2].hide();
-        UItext[UI_MENU_ITEM3].hide();
+        UItext[UI_MENU_ITEM_PAUSE].hide();
+        UItext[UI_MENU_ITEM_RESTART].hide();
+        UItext[UI_MENU_ITEM_RESUME].hide();
+        UItext[UI_MENU_ITEM_QUIT].hide();
         refreshText();
     }
 };

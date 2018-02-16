@@ -15,7 +15,10 @@ def build():
 def run(build_dir):
     cmd = [build_dir + "/main"]
     print("-- RUNNING GAME")
-    call(cmd)
+    
+    while call(cmd):
+        pass
+
 
 def compile_spritesheet(x,y,w,h,c,r, source, target):
     return
