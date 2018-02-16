@@ -26,7 +26,6 @@
 //#include "./Primitive.hpp"
 
 #define LOG_NO_DEBUG 0
-
 //DISCUSSION: using Color = float[4]; instead?
 struct Color {
     float r,g,b,a;
@@ -65,8 +64,8 @@ int main() {
     auto window = init_GLFW_GLEW_OPENGL(OPENGL_MAJOR, OPENGL_MINOR, WIN_WIDTH, WIN_HEIGHT, WIN_NAME);
 
 
-    LOG_INFO("LOADING FILES");    
-    ost::Level level     = ost::loadLevel("./levels/level0");    
+    LOG_INFO("LOADING FILES");
+    ost::Level level     = ost::loadLevel("./levels/level0");
     GLuint pacmanDiffuse = ost::loadTexture("./textures/pacman.png");
     GLuint fontDiffuse   = ost::loadTexture("./textures/font512.png");
 
@@ -92,28 +91,28 @@ int main() {
         auto   pacmanUV      = ost::makeSpriteUVCoordinates(4,4,16, {5.5f, 6.0f},{278.0f, 278.0f},{439.0f, 289.0f});
         auto   ghostUV       = ost::makeSpriteUVCoordinates(2,4,8, {295.0f, 6.0f},{144.0f, 278.0f}, {439.0f, 289.0f});
 
-        glm::vec2 pacmanStart = {0.0f, 17.0f};
+        glm::vec2 pacmanStart = level.pacmanSpawnTile;
         glm::vec2 ghostStart  = {11.0f, 14.0f};
 
         size_t rectVertexCount  = 4;
         size_t rectElementCount = 6;
-        size_t ghostCount       = 6;
-        
-        spriteShader = Shader::makeShader_VBO_EBO_TEX(spriteShaderProgram, pacmanDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);    
-        
+        size_t ghostCount       = level.ghostSpawnTiles.size();
+
+        spriteShader = Shader::makeShader_VBO_EBO_TEX(spriteShaderProgram, pacmanDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);
+
         auto pacmanMesh = newMesh(spriteShader, rectVertexCount, rectElementCount);
-        pacman = ost::Pacman{ 
-            pacmanMesh, 
-            pacmanStart, 
+        pacman = ost::Pacman{
+            pacmanMesh,
+            pacmanStart,
             pacmanUV
         };
 
         for (size_t i = 0; i < ghostCount; ++i) {
 
             auto ghostMesh = newMesh(spriteShader, rectVertexCount, rectElementCount);
-            ghosts.push_back(ost::Ghost{ 
-                ghostMesh, 
-                ghostStart, 
+            ghosts.push_back(ost::Ghost{
+                ghostMesh,
+                level.ghostSpawnTiles[i],
                 ghostUV
             });
         }
@@ -129,24 +128,24 @@ int main() {
     {
         const glm::vec2 cheeseOffset = glm::vec2(0.5f,-0.5f);
         const size_t    cheeseVertexCount = 1;
-        
+
         cheeseShader = Shader::makeShader_VBO(cheeseShaderProgram, GL_STATIC_DRAW, GL_POINTS);
 
         for (const auto v : level.vertices) {
-            cheese.push_back(ost::Cheese{ 
+            cheese.push_back(ost::Cheese{
                 newMesh(cheeseShader, cheeseVertexCount),
-                v + cheeseOffset 
+                v + cheeseOffset
             });
         }
     }
 
 
-        
+
     LOG_INFO("INIT FONT SHADER");
     Shader::Shader fontShader;
     {
-        fontShader = Shader::makeShader_VBO_EBO_TEX(fontShaderProgram, fontDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);    
-            
+        fontShader = Shader::makeShader_VBO_EBO_TEX(fontShaderProgram, fontDiffuse, GL_STREAM_DRAW, GL_TRIANGLES);
+
         auto makeText = [&](std::string text, glm::vec2 textPos){
 
             const auto   textUV = ost::makeSpriteUVCoordinates(16,16, 128, {0, 0}, {511, 511}, {511, 511});
@@ -156,7 +155,7 @@ int main() {
 
             return ost::Text{
                 Shader::newMesh(fontShader, letterVertexCount * text.size(), letterElementCount * text.size()),
-                textPos, 
+                textPos,
                 textSize,
                 textUV,
                 text
@@ -179,24 +178,24 @@ int main() {
     //
     // INIT BUFFERS - based on the meshes that where allocated(newed) above
     //
-    {   
-        
+    {
+
         Shader::initBuffers_VBO( levelShader );
         Shader::setUniformMat4(levelShader, "scale", level.scaleMatrix);
         Shader::setUniformMat4(levelShader, "move", level.moveMatrix);
-        
+
         Shader::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
         Shader::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
-        
+
         Shader::initBuffers_VBO( cheeseShader );
         Shader::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
         Shader::setUniformMat4(cheeseShader, "move", level.moveMatrix);
         Shader::setUniformFloat(cheeseShader, "pointSize", 5.0f);
-        
+
         Shader::initBuffers_VBO_EBO_TEX( spriteShader );
         Shader::setUniformMat4(spriteShader, "scale", level.scaleMatrix);
         Shader::setUniformMat4(spriteShader, "move", level.moveMatrix);
-        
+
         Shader::initBuffers_VBO_EBO_TEX( fontShader );
         Shader::setUniformMat4(fontShader, "scale", level.scaleMatrix);
         Shader::setUniformMat4(fontShader, "move", level.moveMatrix);
@@ -207,15 +206,15 @@ int main() {
     //
     auto startPause = [&](){
         double pausetime = glfwGetTime();
-        
+
         userInterface.showMenu();
-        
+
         while (ost::pause) {
             glfwPollEvents();
             render(window, levelShader, spriteShader, cheeseShader, fontShader);
             if (( glfwWindowShouldClose(window) || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)) break;
         }
-        
+
         userInterface.hideMenu();
         glfwSetTime(pausetime);
     };
@@ -414,7 +413,7 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     }
     // 4. DELETE CHEESE -
     {
-
+        // for(auto& cheese : ch)
     }
 
     return (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);

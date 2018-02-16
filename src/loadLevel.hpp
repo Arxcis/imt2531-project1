@@ -33,7 +33,7 @@ Level loadLevel(const char* level_path)
 
 
         // Initialize 2d grid vector
-        std::vector<std::vector<int>> grid;
+        std::vector<std::vector<TileType>> grid;
         grid.resize(levelHeight);
         for(auto& g : grid) {
             g.resize(levelWidth);
@@ -45,7 +45,7 @@ Level loadLevel(const char* level_path)
             if (in.eof() || in.bad()) {
                 LOG_ERROR("Y out of range in level read");
             }
-            
+
             std::getline(in, line);
             std::stringstream ss(line);
 
@@ -57,9 +57,9 @@ Level loadLevel(const char* level_path)
 
 
 
-                if(n % 2 == 0) { buffer.push_back(glm::vec2(x, levelHeight - y) ); } // FILL THE BUFFER WITH Vectors - vertex candidate
-                
-                grid[(levelHeight-1) - y][x] = n;
+                if(n != 1) { buffer.push_back(glm::vec2(x, levelHeight - y) ); } // FILL THE BUFFER WITH Vectors - vertex candidate
+
+                grid[(levelHeight-1) - y][x] = (TileType)n;
             }
         }
 
