@@ -15,7 +15,7 @@ uniform float time;
 
 void main()
 {
-    gl_Position = scale * move * vec4(position, 0.0, 1.0);
+    gl_Position = scale * move * vec4(position, 0,1.0);
     gl_PointSize = pointSize;
 
     Color = color;

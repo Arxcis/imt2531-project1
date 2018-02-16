@@ -26,7 +26,7 @@
 #include "./logger.h"
 #include "./Level.hpp"
 //#include "./Primitive.hpp"
-
+#define _1337 57
 #define LOG_NO_DEBUG 0
 //DISCUSSION: using Color = float[4]; instead?
 struct Color {
@@ -235,8 +235,7 @@ int main() {
     glfwDestroyWindow(window);
     glfwTerminate();
 
-
-    return ost::restart;
+    return ost::restart ? _1337 : 0;
 }
 
 
@@ -362,6 +361,7 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     baseTime = glfwGetTime();
 
 
+
       // UPDATE
     // 1. MOVE ANIMATE PACMAN -  W, A, S, D
     {
@@ -433,6 +433,8 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
 inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shader& spriteShader, Shader::Shader& cheeseShader, Shader::Shader& fontShader)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    Shader::setUniformFloat(levelShader, "time", glfwGetTime());
 
     Shader::drawVBO(levelShader);
     Shader::drawVBO(cheeseShader);

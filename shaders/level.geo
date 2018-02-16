@@ -4,6 +4,7 @@ layout(points) in;
 layout(triangle_strip, max_vertices = 4) out;
 
 uniform float quadSize = .1;
+uniform float time;
 /*
     0 is origin from vertexshader
 

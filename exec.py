@@ -15,10 +15,9 @@ def build():
 def run(build_dir):
     cmd = [build_dir + "/main"]
     print("-- RUNNING GAME")
-    
-    while call(cmd):
+    _1337 = 57
+    while call(cmd) == _1337:
         pass
-
 
 def install_libraries(ssh):
 
@@ -34,21 +33,21 @@ def install_libraries(ssh):
 
     if ssh:
         call(["git", "clone", "git@prod3.imt.hig.no:imt2531/imt2531_lectures.git"])
-    else: 
+    else:
         call(["git", "clone", "http://prod3.imt.hig.no/imt2531/imt2531_lectures.git"])
 
 
-    if not os.path.isdir("./glew"): 
-        call(["mv", "./imt2531_lectures/lab03/glew", "."]) 
-    else: 
+    if not os.path.isdir("./glew"):
+        call(["mv", "./imt2531_lectures/lab03/glew", "."])
+    else:
         print("-- ./glew already installed")
 
-    if not os.path.isdir("./glfw"): 
+    if not os.path.isdir("./glfw"):
         call(["mv", "./imt2531_lectures/lab03/glfw", "."])
-    else: 
+    else:
         print("-- ./glfw already installed")
 
-    if not os.path.isdir("./glm"):  
+    if not os.path.isdir("./glm"):
         call(["mv", "./imt2531_lectures/lab03/glm", "."])
     else:
         print("-- ./glm already installed")

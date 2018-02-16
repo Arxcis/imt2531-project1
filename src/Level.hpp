@@ -59,7 +59,7 @@ namespace ost
         ,levelUnit(2.0f/(biggestSize))
         ,scaleMatrix(
             mat4(
-                levelUnit,  0,              0,      0,
+                levelUnit,  0,              0,      0.02f,
                 0,          levelUnit,      0,      0,
                 0,          0,              1,      0,
                 0,          0,              0,      1
