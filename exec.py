@@ -15,10 +15,9 @@ def build():
 def run(build_dir):
     cmd = [build_dir + "/main"]
     print("-- RUNNING GAME")
-    call(cmd)
-
-def compile_spritesheet(x,y,w,h,c,r, source, target):
-    return
+    
+    while call(cmd):
+        pass
 
 
 def install_libraries(ssh):
@@ -59,12 +58,7 @@ def install_libraries(ssh):
 
 
 if __name__ == "__main__":
-    """
-    compile_spritesheet(134, 234, 234, 234, 234,234, "pacman.png", "pacman.ost")
-    compile_spritesheet(134, 234, 234, 234, 234,234, "pacman.png", "pacman.ost")
-    compile_spritesheet(134, 234, 234, 234, 234,234, "pacman.png", "numbers.ost")
-    """
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--run", help="run only", action="store_true")
     parser.add_argument("-i", "--install", help="install required libraries", action="store_true")
