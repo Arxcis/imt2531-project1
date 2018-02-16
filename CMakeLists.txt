@@ -2,7 +2,7 @@
 #
 # COMPILE USING c++ 2014
 #
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.1)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -77,7 +77,7 @@ endif()
 
 #
 # INCLUDE DIRECTORIES
-# 
+#
 include_directories(${PROJECT_SOURCE_DIR}/include/)
 include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/glfw/include/)

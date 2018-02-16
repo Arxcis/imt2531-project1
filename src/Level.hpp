@@ -1,45 +1,43 @@
 #pragma once
 #include <vector>
-#include <algorithm>
+#include <map>
+#include <utility>
 #include "glm/glm.hpp"
 #include "./Shader.hpp"
+#include "Entity.h"
 #include "./logger.h"
 
 
 namespace ost
 {
 
-    struct Portal {
-        Portal* destination;
-        glm::ivec2 entryDirection;
-        glm::ivec2 tileIndex;
-    };
-
-
     enum TileType : int {
-        FLOOR           = 0b00000000, // 0   //THESE ARE VERY HACKY FLAGS
-        WALL            = 0b00000001, // 1   //AS WE DONT ALLOW ANYTHING ELSE TO APPEAR WITH WALL
-        FOOD            = 0b00000010, // 2
-        SUPERFOOD       = 0b00000011, // 3   //THAT'S WHY WE USE THE WALL-bit FOR OTHER TILE FLAGS AS WELL
+        FLOOR            = 0b00000000, // 0   //THESE ARE VERY HACKY FLAGS
+        WALL             = 0b00000001, // 1   //AS WE DONT ALLOW ANYTHING ELSE TO APPEAR WITH WALL
+        FOOD             = 0b00000010, // 2
+        SUPERFOOD        = 0b00000011, // 3   //THAT'S WHY WE USE THE WALL-bit FOR OTHER TILE FLAGS AS WELL
 
-        PACMAN_START    = 0b00000100, // 4   //
-        GHOST_START     = 0b00001000, // 8
+        PACMAN_START     = 0b00000100, // 4   //
+        GHOST_START      = 0b00001000, // 8
+        PORTAL_KEY_SHIFT = 0b00001000, // 8
 
         //PORTALS  > 16
-        PORTAL_UP       = 0b00010000, //16
-        PORTAL_DOWN     = 0b00100000, //32
-        PORTAL_RIGHT    = 0b00110000, //48
-        PORTAL_LEFT     = 0b01000000 //64
+        PORTAL_UP        = 0b00010000, //16
+        PORTAL_DOWN      = 0b00100000, //32
+        PORTAL_RIGHT     = 0b01000000, //64
+        PORTAL_LEFT      = 0b10000000 //128
+        //FOR PORTAL INDEX: TileType >> GHOST_START
+
 
         //ALL BYTES IN FRONT OF PORTAL ie 1 << n for n > 6 will be considered ids of portal pairs
     };
     using Grid = const std::vector<std::vector<TileType>>;
-    using PortalPair = std::pair<Portal, Portal>;
+    struct Pacman;
 
     using namespace glm;
     class Level {
-    
-    public:    
+
+    public:
         const std::vector<std::vector<TileType>> grid;
         const std::vector<vec2> vertices;
         const glm::ivec2 size;
@@ -48,7 +46,7 @@ namespace ost
 
         glm::ivec2 pacmanSpawnTile;
         std::vector<glm::ivec2> ghostSpawnTiles;
-        std::vector<PortalPair> portals;
+        std::map<TileType, Portal> portals;
 
         Level(const std::vector<vec2> _vertices, const ivec2 _size, Grid _grid)
         :grid(_grid)
@@ -70,10 +68,76 @@ namespace ost
 
                         LOG_DEBUG("Ghost pos set to (%d, %d)", tileIndex.x,tileIndex.y);
                     }
+                    if(tile >= PORTAL_UP)//PORTALS
+                    {
+                        LOG_DEBUG("FOUND PORTAL: %d", tile);
+
+                        if((tile & PORTAL_UP) == PORTAL_UP) {
+                            LOG_DEBUG("FOUND PORTAL_UP: %d at (%d,%d)", tile, tileIndex.x, tileIndex.y)
+                            portals.insert(
+                                std::pair<TileType, Portal>(
+                                    tile,
+                                    ost::Portal{
+                                        glm::ivec2{0,1},
+                                        tileIndex
+                                    }
+                                )
+                            );
+                        }
+                        if((tile & PORTAL_DOWN) == PORTAL_DOWN) {
+                            LOG_DEBUG("FOUND PORTAL_DOWN: %d at (%d,%d)", tile, tileIndex.x, tileIndex.y)
+                            portals.insert(
+                                std::pair<TileType, Portal>(
+                                    tile,
+                                    ost::Portal{
+                                        glm::ivec2{0,-1},
+                                        tileIndex
+                                    }
+                                )
+                            );
+                        }
+                        if((tile & PORTAL_LEFT) == PORTAL_LEFT) {
+                            LOG_DEBUG("FOUND PORTAL_LEFT: %d at (%d,%d)", tile, tileIndex.x, tileIndex.y)
+                            portals.insert(std::pair<TileType, Portal>(
+                                    tile,
+                                    ost::Portal{
+                                        glm::ivec2{-2,0},
+                                        tileIndex
+                                    }
+                                )
+                            );
+                        }
+                        if((tile & PORTAL_RIGHT) == PORTAL_RIGHT) {
+                            LOG_DEBUG("FOUND PORTAL_RIGHT: %d at (%d,%d)", tile, tileIndex.x, tileIndex.y)
+                            portals.insert(std::pair<TileType, Portal>(
+                                    tile,
+                                    ost::Portal{
+                                        glm::ivec2{1,0},
+                                        tileIndex
+                                    }
+                                )
+                            );
+                        }
+
+                    }
                     tileIndex.x++;
                 }
                 tileIndex.x = 0;
                 tileIndex.y++;
+            }
+            for(auto& portal : portals) {
+                int portalPairKey = (portal.first >> 8);
+                LOG_DEBUG("Portal p1: tile=%d, key=%d", portal.first, portalPairKey);
+                for(auto& p2 : portals) {
+                    int p2PortalPairKey = (p2.first >> 8);
+                    LOG_DEBUG("Portal p2: tile=%d, key=%d", p2.first, p2PortalPairKey);
+                    //if the two portals are supposed to be connected, but are not the same portal
+                    if((p2PortalPairKey == portalPairKey) && (portal.second.tileIndex != p2.second.tileIndex)) {
+                        portal.second.destination = &p2.second;
+                        p2.second.destination = &portal.second;
+                        LOG_DEBUG("Connected portals at tile (%d,%d), (%d,%d)", portal.second.tileIndex.x, portal.second.tileIndex.y, p2.second.tileIndex.x, p2.second.tileIndex.y);
+                    }
+                }
             }
 
         }
@@ -180,4 +244,20 @@ namespace ost
             LOG_ERROR("HOW DA FUCK DID YOU GET ALL THE WAY HERE !??????? ");
         }
     };
+
+
+inline bool Portal::tryTeleport(const Pacman& pacman) {
+
+    return Level::isInSameTile(tileIndex+entryDirection, vec2{0.25f,0.25f}, pacman.pos,  vec2{0.25f,0.25f});
+}
+
+inline void Portal::teleport(Pacman& pacman) {
+    auto const tpFrom = tileIndex+entryDirection;
+    auto const tpTo   = destination->tileIndex;
+    LOG_DEBUG("teleport from (%d, %d) to (%d, %d)", tpFrom.x, tpFrom.y, tpTo.x, tpTo.y);
+
+    pacman.pos = tpTo;
+    pacman.direction = destination->exitDirection();
+}
+
 }

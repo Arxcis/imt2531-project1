@@ -1,8 +1,8 @@
 #pragma once
 #include <vector>
 #include <cmath>
-#include "glm/glm.hpp"
 #include "./spritesheet.hpp"
+#include "Entity.h"
 #include "./Shader.hpp"
 #include "./Level.hpp"
 
@@ -39,78 +39,6 @@ inline int getNextAnimationFrame(const int currentFrame, const glm::ivec2 direct
     return FRAME_UP;
 };
 
-struct Pacman
-{
-    enum PacmanFrame : int {
-        PACMAN_DOWN0,  PACMAN_DOWN1, PACMAN_DOWN2, PACMAN_DOWN3,
-        PACMAN_UP0,    PACMAN_UP1,  PACMAN_UP2, PACMAN_UP3,
-        PACMAN_LEFT0,  PACMAN_LEFT1, PACMAN_LEFT2, PACMAN_LEFT3,
-        PACMAN_RIGHT0, PACMAN_RIGHT1, PACMAN_RIGHT2, PACMAN_RIGHT3,
-    };
-
-    Mesh::Mesh             mesh;
-    glm::vec2              pos;
-    std::vector<ost::Rect> uv;
-
-    glm::vec2              size = { 1.0f, 1.0f };
-    float                 speed = 3.0f;
-    int          animationFrame = PACMAN_RIGHT3;
-    glm::ivec2        direction = { 1, 0 };
-    double       nextUpdateTime = 0.0;
-    double       invincibleTime = 0.0;
-    int                   lives = 3;
-    int                   score = 0;
-
-    void bind() { 
-        Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0); 
-    }
-
-    void addScore(int points) {
-        score += points;
-    }
-
-    void damage() 
-    {
-        if(invincibleTime > 0)
-            return;
-        lives--;
-        LOG_INFO("Pacman.lives: %d", lives);
-        invincibleTime = 2.0; //MAGIC NUMBER
-    }
-
-    void tickInvincibility(const double dt) 
-    {
-        invincibleTime -= dt;
-    }
-
-    void move(const float dt, const Grid& grid)
-    {
-        if (Level::canWalkToward(grid, pos, size, direction))
-            pos += glm::vec2{direction} * dt * speed;
-    }
-
-    void towards(const glm::ivec2 _wantedDirection, const Grid& grid) 
-    {
-        if (_wantedDirection != direction) {
-            if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
-                direction = _wantedDirection;
-
-                pos = Level::getTileSnapPosition(pos, size);
-            }
-        }
-    }
-
-    void animate(const double gameTime)
-    {
-        const double  timeStep = .1;
-        if (gameTime > nextUpdateTime) {
-            nextUpdateTime += timeStep;
-            animationFrame = getNextAnimationFrame(animationFrame, direction, PACMAN_UP0, PACMAN_DOWN0, PACMAN_LEFT0, PACMAN_RIGHT0, 4);
-            Mesh::updateRect(mesh, pos, size, uv[animationFrame], 0);
-        }
-    }
-};
-
 struct Ghost
 {
     enum GhostFrame : int {
@@ -135,13 +63,13 @@ struct Ghost
         Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0);
     }
 
-    void move(const float dt, const Grid& grid)
+    void move(const float dt, const ost::Grid& grid)
     {
         if (Level::canWalkToward(grid, pos, size, direction))
             pos += glm::vec2{direction} * dt * speed;
     }
 
-    bool tryAttack(const Pacman& pacman) 
+    bool tryAttack(const Pacman& pacman)
     {
         if(Level::isInSameTile(pacman.pos, pacman.size, pos, size)) {
             if(!onAttackCooldown) {
@@ -154,7 +82,7 @@ struct Ghost
         return false;
     }
 
-    void towards(const glm::ivec2 _wantedDirection, const Grid& grid)
+    void towards(const glm::ivec2 _wantedDirection, const ost::Grid& grid)
     {
         if (_wantedDirection != direction) {
             if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
@@ -184,10 +112,10 @@ struct Cheese
     const glm::vec2 size{0.5f,0.5f};
 
     void bind() {
-        Mesh::bindPoint(mesh, pos, vec4(1.0f));   
+        Mesh::bindPoint(mesh, pos, vec4(1.0f));
     }
 
-    bool tryGetEatenBy(const Pacman& pacman) 
+    bool tryGetEatenBy(const Pacman& pacman)
     {
         if(Level::isInSameTile(pos, size, pacman.pos, pacman.size)) {
             enabled = false;
@@ -209,7 +137,7 @@ struct Text
     float                  margin = 0.1f;
 
     void bind() {
-        Mesh::bindText(mesh, pos, size, uv, text, margin, color);        
+        Mesh::bindText(mesh, pos, size, uv, text, margin, color);
     }
 
     void print()
@@ -263,7 +191,7 @@ public:
     {
         hideMenu();
         for (auto& txt: UItext) {
-            txt.bind();            
+            txt.bind();
         }
     }
 
@@ -340,5 +268,35 @@ public:
         refreshText();
     }
 };
+
+inline void Pacman::bind() {
+    Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0);
+}
+
+inline void Pacman::move(const float dt, const ost::Grid& grid) {
+    if (Level::canWalkToward(grid, pos, size, direction))
+        pos += glm::vec2{direction} * dt * speed;
+}
+
+inline void Pacman::towards(const glm::ivec2 _wantedDirection, const ost::Grid& grid) {
+
+    if (_wantedDirection != direction) {
+        if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
+            direction = _wantedDirection;
+
+            pos = Level::getTileSnapPosition(pos, size);
+        }
+    }
+}
+
+inline void Pacman::animate(const double gameTime)
+{
+    const double  timeStep = .1;
+    if (gameTime > nextUpdateTime) {
+        nextUpdateTime += timeStep;
+        animationFrame = getNextAnimationFrame(animationFrame, direction, PACMAN_UP0, PACMAN_DOWN0, PACMAN_LEFT0, PACMAN_RIGHT0, 4);
+        Mesh::updateRect(mesh, pos, size, uv[animationFrame], 0);
+    }
+}
 
 } // END NAMESPACE OST

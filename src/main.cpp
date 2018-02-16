@@ -140,6 +140,7 @@ int main() {
                 v + cheeseOffset
             };
             cheese.bind();
+            cheeses.push_back(cheese);
         }
     }
 
@@ -407,8 +408,8 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
         }
 
         for(auto& portal : level.portals) {
-            if(portal.tryTeleport(pacman)) {
-                portal.teleport(pacman);
+            if(portal.second.tryTeleport(pacman)) {
+                portal.second.teleport(pacman);
             }
         }
     }

@@ -10,19 +10,11 @@
 #include "GL/glew.h"
 
 #include "./logger.h"
+#include "Entity.h"
 #include "./spritesheet.hpp"
 
 namespace Mesh { struct Mesh; }
 namespace Shader {
-
-using  Element = int;
-struct Vertex
-{
-    glm::vec2 position{};
-    glm::vec4 color{};
-    glm::vec2 texCoord{};
-};
-
 
 static size_t VBO_MAX_SIZE = 2048;
 static size_t EBO_MAX_SIZE = 4096;
@@ -77,19 +69,6 @@ inline void   setUniformMat4(const Shader& shader, const std::string uniname, co
 }
 
 namespace Mesh {
-
-struct Mesh
-{
-    std::vector<Shader::Vertex>::iterator  VBObegin;
-    std::vector<Shader::Vertex>::iterator  VBOend;
-    size_t VBOindex;
-    size_t VBOcount;
-
-    std::vector<Shader::Element>::iterator EBObegin;
-    std::vector<Shader::Element>::iterator EBOend;
-    size_t EBOindex;
-    size_t EBOcount;
-};
 
 inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n);
 inline void bindPoint(const Mesh& mesh, const glm::vec2 pos);
@@ -358,7 +337,6 @@ inline void setUniformFloat(const Shader& shader, const std::string uniname, con
 {
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
-    LOG_INFO("uniform: %d", uniform);
     if (uniform == -1) {
         LOG_ERROR("UNIFORM == -1");
     }
