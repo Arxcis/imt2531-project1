@@ -434,7 +434,8 @@ inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shad
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Shader::setUniformFloat(levelShader, "time", glfwGetTime());
+    // @experimental @note Halvor did something with this in the shader, but forgot to commit the change of the shader.
+//    Shader::setUniformFloat(levelShader, "time", glfwGetTime());
 
     Shader::drawVBO(levelShader);
     Shader::drawVBO(cheeseShader);

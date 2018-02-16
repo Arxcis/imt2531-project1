@@ -290,8 +290,8 @@ struct UserInterface
 
     void setScore(size_t score)
     {
-        char buffer[10];
-        sprintf(buffer, "Score: %03d", score);
+        char buffer[20];
+        snprintf(buffer,20, "Score: %03lu", score);
         UItext[UI_SCORE].text = buffer;
         UItext[UI_SCORE].print();
     }
