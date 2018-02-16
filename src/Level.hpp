@@ -44,8 +44,6 @@ namespace ost
         const glm::ivec2 size;
         const int biggestSize;
         const float levelUnit;
-        const mat4 scaleMatrix;
-        const mat4 moveMatrix;
 
         glm::ivec2 pacmanSpawnTile;
         std::vector<glm::ivec2> ghostSpawnTiles;
@@ -57,22 +55,6 @@ namespace ost
         ,size(_size)
         ,biggestSize((_size.x > _size.y) ? _size.x : _size.y)
         ,levelUnit(2.0f/(biggestSize))
-        ,scaleMatrix(
-            mat4(
-                levelUnit,  0,              0,      0.02f,
-                0,          levelUnit,      0,      0,
-                0,          0,              1,      0,
-                0,          0,              0,      1
-            )
-        )
-        ,moveMatrix(
-            mat4(
-                1,             0,           0,      0,
-                0,             1,           0,      0,
-                0,             0,           1,      0,
-                -_size.x*0.5, -_size.y*0.5, 0,      1
-            )
-        )
         {
             auto tileIndex = glm::ivec2{0,1};
             for(auto& row : grid) {
@@ -93,6 +75,24 @@ namespace ost
                 tileIndex.y++;
             }
 
+        }
+
+        static glm::mat4 getScaleMatrix(float levelUnit) {
+            return mat4{
+                levelUnit,  0,              0,      0,
+                0,          levelUnit,      0,      0,
+                0,          0,              1,      0,
+                0,          0,              0,      1
+            };
+        }
+
+        static glm::mat4 getMoveMatrix(glm::vec2 size) {
+            return mat4{
+                1,             0,           0,      0,
+                0,             1,           0,      0,
+                0,             0,           1,      0,
+                -size.x*0.5, -size.y*0.5, 0,      1
+            };
         }
 
         //

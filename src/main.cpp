@@ -179,10 +179,12 @@ int main() {
     // INIT BUFFERS - based on the meshes that where allocated(newed) above
     //
     {
+        auto scaleMatrix = ost::Level::getScaleMatrix(level.levelUnit);
+        auto moveMatrix  = ost::Level::getMoveMatrix(level.size);
 
         Shader::initBuffers_VBO( levelShader );
-        Shader::setUniformMat4(levelShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(levelShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(levelShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(levelShader, "move", moveMatrix);
 
         const Color FLOOR  = {1.0f, .7f, .8f, 1.0f};
 
@@ -190,17 +192,17 @@ int main() {
         Shader::setUniformVec4(levelShader,  "floor_color", {FLOOR.r, FLOOR.g,FLOOR.b,FLOOR.a});
 
         Shader::initBuffers_VBO( cheeseShader );
-        Shader::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(cheeseShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(cheeseShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(cheeseShader, "move", moveMatrix);
         Shader::setUniformFloat(cheeseShader, "pointSize", 5.0f);
 
         Shader::initBuffers_VBO_EBO_TEX( spriteShader );
-        Shader::setUniformMat4(spriteShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(spriteShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(spriteShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(spriteShader, "move", moveMatrix);
 
         Shader::initBuffers_VBO_EBO_TEX( fontShader );
-        Shader::setUniformMat4(fontShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(fontShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(fontShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(fontShader, "move", moveMatrix);
     }
 
     //
