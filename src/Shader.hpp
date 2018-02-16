@@ -270,12 +270,12 @@ inline void drawVBO_EBO_TEX(const Shader& shader)
     glUseProgram(0);
 }
 
-//
-// @function newMesh @overload
-//  @brief Allocating only vertices, (not elements), in the VBO.
-//  @ return A Mesh with iterators pointing to the collection of vertices
-//           generated in the VBO.
-//
+/*
+ * @function newMesh @overload
+ *  @brief Allocating only vertices, (not elements), in the VBO.
+ *  @ return A Mesh with iterators pointing to the collection of vertices
+ *           generated in the VBO.
+ */
 inline auto newMesh(Shader& shader, const size_t vertexCount) -> Mesh::Mesh
 {
 
@@ -298,12 +298,12 @@ inline auto newMesh(Shader& shader, const size_t vertexCount) -> Mesh::Mesh
 }
 
 
-//
-// @function newMesh @overload
-//  @brief Allocating requested vertices and elements, in the corresponding VBO and EBO buffers.
-//  @return Returns a Mesh struc, which holds pointers to the location of the allocated vertices
-//          and elements.
-//
+/*
+ * @function newMesh @overload
+ *  @brief Allocating requested vertices and elements, in the corresponding VBO and EBO buffers.
+ *  @return Returns a Mesh struc, which holds pointers to the location of the allocated vertices
+ *          and elements.
+ */
 inline auto newMesh(Shader& shader, const size_t vertexCount, const size_t elementCount) -> Mesh::Mesh
 {
     size_t VBOindex = shader.vertexBuffer.size();
@@ -351,7 +351,6 @@ inline void setUniformVec4(const Shader& shader, const std::string uniname, cons
 {
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
-    LOG_INFO("uniform: %d", uniform);
     if (uniform == -1) {
         LOG_ERROR("UNIFORM == -1");
     }
@@ -366,7 +365,6 @@ inline void setUniformMat4(const Shader& shader, const std::string uniname, cons
 
     glUseProgram(shader.program);
     GLint uniform = glGetUniformLocation(shader.program, uniname.c_str());
-    LOG_INFO("uniform: %d", uniform);
     if (uniform == -1) {
         LOG_ERROR("UNIFORM == -1");
     }
@@ -376,30 +374,32 @@ inline void setUniformMat4(const Shader& shader, const std::string uniname, cons
 
 } // END NAMESPACE SHADER
 
-namespace Mesh {
+namespace Mesh
+{
 
 inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect uv, const size_t n)
 {
-    auto offsetVBO = n * 4;
-    auto offsetEBO = n * 6;
+    const auto VBOoffset = (n * 4);
+    const auto EBOoffset = (n * 6);
+    const auto VBOit = mesh.VBObegin + VBOoffset;
+    const auto EBOit = mesh.EBObegin + EBOoffset;
 
+    VBOit[0].position = pos;
+    VBOit[1].position = pos + glm::vec2{ size.x, 0.0f};
+    VBOit[2].position = pos + glm::vec2{ size.x, -size.y };
+    VBOit[3].position = pos + glm::vec2{ 0.0f,   -size.y };
 
-    mesh.VBObegin[offsetVBO + 0].position = pos;
-    mesh.VBObegin[offsetVBO + 1].position = pos + glm::vec2{ size.x, 0.0f};
-    mesh.VBObegin[offsetVBO + 2].position = pos + glm::vec2{ size.x, -size.y };
-    mesh.VBObegin[offsetVBO + 3].position = pos + glm::vec2{ 0.0f,   -size.y };
+    VBOit[0].texCoord = uv.topleft;
+    VBOit[1].texCoord = uv.topright;
+    VBOit[2].texCoord = uv.botright;
+    VBOit[3].texCoord = uv.botleft;
 
-    mesh.VBObegin[offsetVBO + 0].texCoord = uv.topleft;
-    mesh.VBObegin[offsetVBO + 1].texCoord = uv.topright;
-    mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;
-    mesh.VBObegin[offsetVBO + 3].texCoord = uv.botleft;
-
-    mesh.EBObegin[offsetEBO + 0] = mesh.VBOindex + offsetVBO + 0;
-    mesh.EBObegin[offsetEBO + 1] = mesh.VBOindex + offsetVBO + 1;
-    mesh.EBObegin[offsetEBO + 2] = mesh.VBOindex + offsetVBO + 2;
-    mesh.EBObegin[offsetEBO + 3] = mesh.VBOindex + offsetVBO + 2;
-    mesh.EBObegin[offsetEBO + 4] = mesh.VBOindex + offsetVBO + 3;
-    mesh.EBObegin[offsetEBO + 5] = mesh.VBOindex + offsetVBO + 0;
+    EBOit[0] = mesh.VBOindex + VBOoffset + 0;
+    EBOit[1] = mesh.VBOindex + VBOoffset + 1;
+    EBOit[2] = mesh.VBOindex + VBOoffset + 2;
+    EBOit[3] = mesh.VBOindex + VBOoffset + 2;
+    EBOit[4] = mesh.VBOindex + VBOoffset + 3;
+    EBOit[5] = mesh.VBOindex + VBOoffset + 0;
 }
 
 
@@ -411,59 +411,104 @@ inline void bindPoint(const Mesh& mesh, const glm::vec2 pos, const glm::vec4 col
 
 inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const std::vector<ost::Rect>& uv, std::string text, float margin, glm::vec4 color)
 {
-        size_t i = 0;
-        for(auto t: text) {
+    const size_t letterVertexCount = 4;
+    const size_t letterElementCount = 6;
+ 
+    #ifdef OST_DEBUG
+        if (letterVertexCount * text.size() >= mesh.VBOcount) LOG_ERROR("if (letterVertexCount * text.size() >= mesh.VBOcount), iterator out of bounds");
+        if (letterElementCount * text.size() >= mesh.EBOcount) LOG_ERROR("if (letterElementCount * text.size() >= mesh.VBOcount), iterator out of bounds");
+    #endif
+        auto VBOit = mesh.VBObegin;
+        auto EBOit = mesh.EBObegin;
+        auto i = 0;
+        for(const auto t: text) {
+            
+            auto letterOffsetPosition = pos + glm::vec2{size.x + margin, 0} * float(i);;
+            auto uvRect    = uv[i];
+            auto VBOoffset = i * letterVertexCount;  
 
-            auto offsetVBO = i * 4;
+            VBOit[0].position = letterOffsetPosition;
+            VBOit[1].position = letterOffsetPosition + glm::vec2{ size.x, 0.0f};
+            VBOit[2].position = letterOffsetPosition + glm::vec2{ size.x, -size.y };
+            VBOit[3].position = letterOffsetPosition + glm::vec2{ 0.0f,   -size.y };
 
-            mesh.VBObegin[ offsetVBO + 0].color = color;
-            mesh.VBObegin[ offsetVBO + 1].color = color;
-            mesh.VBObegin[ offsetVBO + 2].color = color;
-            mesh.VBObegin[ offsetVBO + 3].color = color;
+            VBOit[0].color = color;
+            VBOit[1].color = color;
+            VBOit[2].color = color;
+            VBOit[3].color = color;
+            
+            VBOit[0].texCoord = uvRect.topleft;
+            VBOit[1].texCoord = uvRect.topright;
+            VBOit[2].texCoord = uvRect.botright;
+            VBOit[3].texCoord = uvRect.botleft;
 
-            bindRect(mesh, pos + (glm::vec2{size.x + margin, 0} * float(i)), size, uv[t], i);
-            ++i;
+            EBOit[0] = mesh.VBOindex + VBOoffset + 0;
+            EBOit[1] = mesh.VBOindex + VBOoffset + 1;
+            EBOit[2] = mesh.VBOindex + VBOoffset + 2;
+            EBOit[3] = mesh.VBOindex + VBOoffset + 2;
+            EBOit[4] = mesh.VBOindex + VBOoffset + 3;
+            EBOit[5] = mesh.VBOindex + VBOoffset + 0;
+            
+            VBOit += letterVertexCount;
+            EBOit += letterElementCount;
+            i     += 1;
         }
 }
 
 
 inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color)
-{
-    for (size_t i = 0; i < text.size(); ++i) {
-        auto offsetVBO = i * 4;
-        mesh.VBObegin[ offsetVBO + 0].color = color;
-        mesh.VBObegin[ offsetVBO + 1].color = color;
-        mesh.VBObegin[ offsetVBO + 2].color = color;
-        mesh.VBObegin[ offsetVBO + 3].color = color;
+{   
+    const size_t letterVertexCount = 4;
+ 
+    #ifdef OST_DEBUG
+        if (letterVertexCount * text.size() >= mesh.VBOcount) LOG_ERROR("if (letterVertexCount * text.size() >= mesh.VBOcount), iterator out of bounds");
+    #endif
+
+    auto it = mesh.VBObegin;
+    for (const auto t: text) {
+        it[0].color = color;
+        it[1].color = color;
+        it[2].color = color;
+        it[3].color = color;
+        it += letterVertexCount;
     }
 }
 
 inline void updateTextUV(const Mesh& mesh, std::string text,std::vector<ost::Rect>& uvs)
 {
-    size_t n = 0;
-    for (auto t: text) {
-        auto offsetVBO = n * 4;
-        mesh.VBObegin[ offsetVBO + 0].texCoord = uvs[t].topleft;
-        mesh.VBObegin[ offsetVBO + 1].texCoord = uvs[t].topright;
-        mesh.VBObegin[ offsetVBO + 2].texCoord = uvs[t].botright;
-        mesh.VBObegin[ offsetVBO + 3].texCoord = uvs[t].botleft;
-        ++n;
+    const size_t letterVertexCount = 4;
+ 
+    #ifdef OST_DEBUG
+        if (letterVertexCount * text.size() >= mesh.VBOcount) LOG_ERROR("if (letterVertexCount * text.size() >= mesh.VBOcount), iterator out of bounds");
+    #endif
+
+    auto it = mesh.VBObegin;
+    for (const auto t: text) {
+        it[0].texCoord = uvs[t].topleft;
+        it[1].texCoord = uvs[t].topright;
+        it[2].texCoord = uvs[t].botright;
+        it[3].texCoord = uvs[t].botleft;
+        it += letterVertexCount;
     }
 }
 
 inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const ost::Rect& uv, const size_t n)
 {
-    auto offsetVBO = n * 4;
+    #ifdef OST_DEBUG
+        if (n * 4 >= mesh.VBOcount) LOG_ERROR("if (n * 4 >= mesh.VBOcount), iterator out of bounds");
+    #endif
 
-    mesh.VBObegin[offsetVBO + 0].position = pos;
-    mesh.VBObegin[offsetVBO + 1].position = pos + glm::vec2{ size.x, 0.0f};
-    mesh.VBObegin[offsetVBO + 2].position = pos + glm::vec2{ size.x, -size.y };
-    mesh.VBObegin[offsetVBO + 3].position = pos + glm::vec2{ 0.0f, -size.y };
+    auto it = mesh.VBObegin + (n * 4);
 
-    mesh.VBObegin[offsetVBO + 0].texCoord = uv.topleft;
-    mesh.VBObegin[offsetVBO + 1].texCoord = uv.topright;
-    mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;
-    mesh.VBObegin[offsetVBO + 3].texCoord = uv.botleft;
+    it[0].position = pos;
+    it[1].position = pos + glm::vec2{ size.x, 0.0f};
+    it[2].position = pos + glm::vec2{ size.x, -size.y };
+    it[3].position = pos + glm::vec2{ 0.0f, -size.y };
+
+    it[0].texCoord = uv.topleft;
+    it[1].texCoord = uv.topright;
+    it[2].texCoord = uv.botright;
+    it[3].texCoord = uv.botleft;
 }
 
 inline void updatePoint(const Mesh& mesh, const float alpha)
