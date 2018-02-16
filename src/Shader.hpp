@@ -448,14 +448,12 @@ inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size
 
 inline void updateTextColor(const Mesh& mesh, std::string text, glm::vec4 color) 
 {
-    size_t n = 0;
-    for (auto t: text) {
-        auto offsetVBO = n * 4;
+    for (size_t i = 0; i < text.size(); ++i) {
+        auto offsetVBO = i * 4;
         mesh.VBObegin[ offsetVBO + 0].color = color;
         mesh.VBObegin[ offsetVBO + 1].color = color;
         mesh.VBObegin[ offsetVBO + 2].color = color;
         mesh.VBObegin[ offsetVBO + 3].color = color;
-        ++n;
     }
 }
 

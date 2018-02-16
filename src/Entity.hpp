@@ -36,6 +36,7 @@ inline int getNextAnimationFrame(const int currentFrame, const glm::ivec2 direct
     else if (direction == vecRight){
             return FRAME_RIGHT + offset;
     }
+    return FRAME_UP;
 };
 
 struct Pacman
@@ -193,9 +194,9 @@ struct Text
 {
     Mesh::Mesh             mesh;
     glm::vec2              pos;
+    glm::vec2              size  = { 1.0f, 1.0f };
     std::vector<ost::Rect> uv;
     std::string            text;
-    glm::vec2              size  = { 1.0f, 1.0f };
     glm::vec4              color = {0,0,1,1};
     float                  margin = 0.1f;
 

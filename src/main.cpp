@@ -32,12 +32,6 @@ struct Color {
 };
 
 namespace ost {
-namespace color {
-const Color BACKGROUND = {.3f, .9f, .3f, 1.0f};
-const Color FLOOR  = {1.0f, .7f, .8f, 1.0f};
-const Color SCORE  = {.3f, .9f, .3f, 1.0f};
-const Color CHEESE = {.3f, .9f, .3f, 1.0f};
-}
 
 bool restart = false;
 bool pause   = false;
@@ -184,8 +178,10 @@ int main() {
         Shader::setUniformMat4(levelShader, "scale", level.scaleMatrix);
         Shader::setUniformMat4(levelShader, "move", level.moveMatrix);
 
+        const Color FLOOR  = {1.0f, .7f, .8f, 1.0f};
+
         Shader::setUniformFloat(levelShader, "quadSize",     2.0f/level.biggestSize);
-        Shader::setUniformVec4(levelShader,  "floor_color", {ost::color::FLOOR.r, ost::color::FLOOR.g,ost::color::FLOOR.b,ost::color::FLOOR.a});
+        Shader::setUniformVec4(levelShader,  "floor_color", {FLOOR.r, FLOOR.g,FLOOR.b,FLOOR.a});
 
         Shader::initBuffers_VBO( cheeseShader );
         Shader::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
@@ -338,7 +334,8 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
 
     // INIT OPENGL
     {
-        using namespace ost::color;
+        const Color BACKGROUND = {.3f, .9f, .3f, 1.0f};
+
         glEnable(GL_PROGRAM_POINT_SIZE);
         glClearColor(BACKGROUND.r,BACKGROUND.g,BACKGROUND.b,BACKGROUND.a);
 

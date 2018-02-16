@@ -52,9 +52,9 @@ namespace ost
         std::vector<PortalPair> portals;
 
         Level(const std::vector<vec2> _vertices, const ivec2 _size, Grid _grid)
-        :vertices(_vertices)
+        :grid(_grid)
+        ,vertices(_vertices)
         ,size(_size)
-        ,grid(_grid)
         ,biggestSize((_size.x > _size.y) ? _size.x : _size.y)
         ,levelUnit(2.0f/(biggestSize))
         ,scaleMatrix(
@@ -100,7 +100,6 @@ namespace ost
         //
         void bindBufferVertices(Mesh::Mesh mesh) const {
             auto vbo = mesh.VBObegin;
-            auto vboindex = mesh.VBOindex;
             for(auto v : vertices) {
                 vbo[0].position = v;
                 vbo += 1;
@@ -159,7 +158,7 @@ namespace ost
 
         static bool isCloseEnoughToTheMiddleOfTile(const glm::ivec2 direction, const glm::ivec2 gridIndex, const glm::vec2 center)
         {
-            const float margin = 0.4f;
+            const float margin = 0.1;
 
 #ifndef OPTIMIZE
             if (direction.y > 0 && direction.x > 0) {
@@ -172,11 +171,9 @@ namespace ost
 #endif
 
             if (direction.x) {
-                // LOG_DEBUG("(center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin) %d\n", (center.x - gridIndex.x > margin && gridIndex.x+1 - center.x > margin));
-                return abs(center.x - (gridIndex.x+0.5)) < 0.1;
+                return abs(center.x - (gridIndex.x+0.5)) < margin;
             } else {
-               // LOG_DEBUG("(center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin) %d\n", (center.y - gridIndex.y > margin && gridIndex.y+1 - center.y > margin));
-                return abs(center.y - (gridIndex.y+0.5) < 0.1);
+                return abs(center.y - (gridIndex.y+0.5) < margin);
             }
 
             LOG_ERROR("HOW DA FUCK DID YOU GET ALL THE WAY HERE !??????? ");
