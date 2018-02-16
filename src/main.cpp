@@ -16,7 +16,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "./macro.hpp"
+
 #include "./loadShader.hpp"
 #include "./loadLevel.hpp"
 #include "./loadTexture.hpp"
@@ -67,7 +67,7 @@ int main() {
 
     const GLuint levelShaderProgram  = ost::loadShaderProgram("./shaders/general.vert", "./shaders/level.geo","./shaders/level.frag");
     const GLuint spriteShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/sprite.frag");
-    const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/general.vert", "./shaders/cheese.frag");
+    const GLuint cheeseShaderProgram = ost::loadShaderProgram("./shaders/cheese.vert", "./shaders/cheese.frag");
     const GLuint fontShaderProgram   = ost::loadShaderProgram("./shaders/general.vert", "./shaders/font.frag");
 
 
@@ -309,7 +309,7 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
     // init G L F W
     if (!glfwInit()){
         glfwTerminate();
-        PANIC("Failed to init GLFW");
+        LOG_ERROR("Failed to init GLFW");
     }
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -323,7 +323,7 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
     glfwMakeContextCurrent(window);
     if (window == NULL) {
         glfwTerminate();
-        PANIC("Failed to open GLFW window");
+        LOG_ERROR("Failed to open GLFW window");
     }
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     glfwSwapInterval(1);
@@ -332,7 +332,7 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
     glewExperimental = GL_TRUE;  // MACOS/intel cpu support
     if (glewInit() != GLEW_OK) {
         glfwTerminate();
-        PANIC("Failed to init GLEW");
+        LOG_ERROR("Failed to init GLEW");
     }
     glfwSetKeyCallback(window, key_callback);
 
@@ -381,13 +381,19 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ){
             pacman.towards(ost::vecRight, level.grid);
         }
+
+        for(auto& portal : level.portals) {
+            if(portal.tryTeleport(pacman)) {
+                portal.teleport(pacman);
+            }
+        }
     }
     // 2. MOVE GHOSTS
     {
-        for(auto& g : ghosts) {
-            g.move(deltaTime, level.grid);
-            g.animate(baseTime);
-            if(g.tryAttack(pacman)) {
+        for(auto& ghost : ghosts) {
+            ghost.move(deltaTime, level.grid);
+            ghost.animate(baseTime);
+            if(ghost.tryAttack(pacman)) {
                 pacman.damage();
             }
         }
@@ -434,7 +440,10 @@ inline void render(GLFWwindow* window, Shader::Shader& levelShader, Shader::Shad
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Shader::setUniformFloat(levelShader, "time", glfwGetTime());
+    // Shader::setUniformFloat(levelShader,  "time", glfwGetTime());
+    Shader::setUniformFloat(cheeseShader, "time", glfwGetTime());
+    // Shader::setUniformFloat(spriteShader, "time", glfwGetTime());
+    // Shader::setUniformFloat(fontShader,   "time", glfwGetTime());
 
     Shader::drawVBO(levelShader);
     Shader::drawVBO(cheeseShader);

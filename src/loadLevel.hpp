@@ -7,7 +7,7 @@
 #include <array>
 #include "./Level.hpp"
 #include "./logger.h"
-#include "./macro.hpp"
+
 #include "glm/glm.hpp"
 
 namespace ost {

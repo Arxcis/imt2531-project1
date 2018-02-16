@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include "GL/glew.h"
-#include "./macro.hpp"
+
 #include "./logger.h"
 
 namespace ost {
@@ -56,7 +56,7 @@ GLuint loadAndCompileShader(const char* fname, GLenum shaderType) {
 
             char errormsg[80 + std::strlen(infolog)];
             snprintf(errormsg, 1024, "%s - %s\n", "The program failed to compile with the error:", infolog);
-            PANIC(errormsg);
+            LOG_ERROR(errormsg);
         }
     }
     return shader;
