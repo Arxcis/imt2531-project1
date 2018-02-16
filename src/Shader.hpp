@@ -424,9 +424,10 @@ inline void bindRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size
 }
 
 
-inline void bindPoint(const Mesh& mesh, const glm::vec2 pos)
+inline void bindPoint(const Mesh& mesh, const glm::vec2 pos, const glm::vec4 color)
 {
     mesh.VBObegin[0].position = pos;
+    mesh.VBObegin[0].color = color;
 }
 
 inline void bindText(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 size, const std::vector<ost::Rect>& uv, std::string text, float margin, glm::vec4 color)
@@ -486,6 +487,11 @@ inline void updateRect(const Mesh& mesh, const glm::vec2 pos, const glm::vec2 si
     mesh.VBObegin[offsetVBO + 1].texCoord = uv.topright;
     mesh.VBObegin[offsetVBO + 2].texCoord = uv.botright;
     mesh.VBObegin[offsetVBO + 3].texCoord = uv.botleft;
+}
+
+inline void updatePoint(const Mesh& mesh, const float alpha)
+{
+    mesh.VBObegin[0].color[3] = alpha;
 }
 
 } // END NAMESPACE MESH

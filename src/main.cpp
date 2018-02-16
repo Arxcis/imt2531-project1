@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
             };
         };
 
-        std::string txt_score   = "Score: 00";
+        std::string txt_score   = "Score: 000";
         std::string txt_lives   = "Lives: 03";
         std::string txt_pause   = "----    PAUSE     ----";
         std::string txt_quit    = "        RESUME        ";
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
         std::vector<ost::Text> textElements;
         textElements.resize(5);
 
-        textElements[ost::UI_SCORE]      =  makeText( txt_score,   glm::vec2{ 16,32}  );
+        textElements[ost::UI_SCORE]      =  makeText( txt_score,   glm::vec2{ 14,32}  );
         textElements[ost::UI_LIVES]      =  makeText( txt_lives,   glm::vec2{ 1, 32}  );
         textElements[ost::UI_MENU_ITEM1] =  makeText( txt_pause,   glm::vec2{ 0, 19}  );
         textElements[ost::UI_MENU_ITEM2] =  makeText( txt_quit ,   glm::vec2{ 0, 17}  );
@@ -254,7 +254,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 
     key = (action==GLFW_PRESS)?key:0;
-    LOG_INFO("key: %d  scancode: %d  action: %d   mods: %d", key, scancode, action, mods);
+    //LOG_DEBUG("key: %d  scancode: %d  action: %d   mods: %d", key, scancode, action, mods);
 
     switch(key)
     {
@@ -405,6 +405,9 @@ inline bool update(GLFWwindow* window, ost::Pacman& pacman, ost::Level& level, s
     {
         userInterface.setScore(pacman.score);
         userInterface.setLives(pacman.lives);
+        if(pacman.lives <= 0) {
+            ost::pause = true; //@TODO open the restart/quit menu instead!
+        }
     }
     // 4. DELETE CHEESE -
     {
