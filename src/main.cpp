@@ -25,9 +25,12 @@
 #include "./spritesheet.hpp"
 #include "./logger.h"
 #include "./Level.hpp"
-//#include "./Primitive.hpp"
+#include "./glerror.hpp"
+
 #define _1337 57
 #define LOG_NO_DEBUG 0
+#define OST_DEBUG 1
+
 //DISCUSSION: using Color = float[4]; instead?
 struct Color {
     float r,g,b,a;
@@ -103,15 +106,18 @@ int main() {
             pacmanStart,
             pacmanUV
         };
+        pacman.bind();
 
         for (size_t i = 0; i < ghostCount; ++i) {
 
             auto ghostMesh = newMesh(spriteShader, rectVertexCount, rectElementCount);
-            ghosts.push_back(ost::Ghost{
+            auto g = ost::Ghost{
                 ghostMesh,
                 ghostStarts[i],
                 ghostUV
-            });
+            };
+            g.bind();
+            ghosts.push_back(g);
         }
     }
 
@@ -129,10 +135,11 @@ int main() {
         cheeseShader = Shader::makeShader_VBO(cheeseShaderProgram, GL_STATIC_DRAW, GL_POINTS);
 
         for (const auto v : level.vertices) {
-            cheeses.push_back(ost::Cheese{
+            auto cheese = ost::Cheese{
                 newMesh(cheeseShader, cheeseVertexCount),
                 v + cheeseOffset
-            });
+            };
+            cheese.bind();
         }
     }
 
@@ -176,10 +183,12 @@ int main() {
     // INIT BUFFERS - based on the meshes that where allocated(newed) above
     //
     {
+        auto scaleMatrix = ost::Level::getScaleMatrix(level.levelUnit);
+        auto moveMatrix  = ost::Level::getMoveMatrix(level.size);
 
         Shader::initBuffers_VBO( levelShader );
-        Shader::setUniformMat4(levelShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(levelShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(levelShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(levelShader, "move", moveMatrix);
 
         const Color FLOOR  = {1.0f, .7f, .8f, 1.0f};
 
@@ -187,17 +196,17 @@ int main() {
         Shader::setUniformVec4(levelShader,  "floor_color", {FLOOR.r, FLOOR.g,FLOOR.b,FLOOR.a});
 
         Shader::initBuffers_VBO( cheeseShader );
-        Shader::setUniformMat4(cheeseShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(cheeseShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(cheeseShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(cheeseShader, "move", moveMatrix);
         Shader::setUniformFloat(cheeseShader, "pointSize", 5.0f);
 
         Shader::initBuffers_VBO_EBO_TEX( spriteShader );
-        Shader::setUniformMat4(spriteShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(spriteShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(spriteShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(spriteShader, "move", moveMatrix);
 
         Shader::initBuffers_VBO_EBO_TEX( fontShader );
-        Shader::setUniformMat4(fontShader, "scale", level.scaleMatrix);
-        Shader::setUniformMat4(fontShader, "move", level.moveMatrix);
+        Shader::setUniformMat4(fontShader, "scale", scaleMatrix);
+        Shader::setUniformMat4(fontShader, "move", moveMatrix);
     }
 
     //
@@ -209,9 +218,14 @@ int main() {
         userInterface.showMenu();
 
         while (ost::pause) {
+
             glfwPollEvents();
             render(window, levelShader, spriteShader, cheeseShader, fontShader);
             if (( glfwWindowShouldClose(window) || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)) break;
+
+#ifdef OST_DEBUG
+            ost::handle_GLerror();
+#endif
         }
 
         userInterface.hideMenu();
@@ -227,6 +241,10 @@ int main() {
         render(window, levelShader, spriteShader, cheeseShader, fontShader);
 
         if (ost::pause) startPause();
+
+#ifdef OST_DEBUG
+        ost::handle_GLerror();
+#endif
     }
 
     //
@@ -345,6 +363,12 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+#ifdef OST_OPENGL_VERSION_4_3
+        glEnable              ( GL_DEBUG_OUTPUT );
+        glDebugMessageCallback( (GLDEBUGPROC) ost::MessageCallback, 0 );
+#endif
+
     }
 
     return window;
