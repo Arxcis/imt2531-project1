@@ -160,7 +160,7 @@ namespace ost
         {
             const float margin = 0.1;
 
-#ifndef OPTIMIZE
+#ifdef OST_DEBUG
             if (direction.y > 0 && direction.x > 0) {
                 LOG_ERROR("OMG, direction.x and direction.y is both > 0. DIAGONAL movement not supported!");
             }

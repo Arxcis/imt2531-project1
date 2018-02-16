@@ -25,9 +25,12 @@
 #include "./spritesheet.hpp"
 #include "./logger.h"
 #include "./Level.hpp"
-//#include "./Primitive.hpp"
+#include "./glerror.hpp"
+
 #define _1337 57
 #define LOG_NO_DEBUG 0
+#define OST_DEBUG 1
+
 //DISCUSSION: using Color = float[4]; instead?
 struct Color {
     float r,g,b,a;
@@ -209,9 +212,14 @@ int main() {
         userInterface.showMenu();
 
         while (ost::pause) {
+
             glfwPollEvents();
             render(window, levelShader, spriteShader, cheeseShader, fontShader);
             if (( glfwWindowShouldClose(window) || glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)) break;
+
+#ifdef OST_DEBUG
+            ost::handle_GLerror();
+#endif
         }
 
         userInterface.hideMenu();
@@ -227,6 +235,10 @@ int main() {
         render(window, levelShader, spriteShader, cheeseShader, fontShader);
 
         if (ost::pause) startPause();
+
+#ifdef OST_DEBUG
+        ost::handle_GLerror();
+#endif
     }
 
     //
@@ -345,6 +357,12 @@ inline GLFWwindow* init_GLFW_GLEW_OPENGL(const int openglMajor, const int opengl
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+#ifdef OST_OPENGL_VERSION_4_3
+        glEnable              ( GL_DEBUG_OUTPUT );
+        glDebugMessageCallback( (GLDEBUGPROC) ost::MessageCallback, 0 );
+#endif
+
     }
 
     return window;
