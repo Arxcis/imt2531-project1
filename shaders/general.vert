@@ -11,6 +11,7 @@ uniform mat4 scale;
 uniform mat4 move;
 
 uniform float pointSize = 1.0;
+uniform float time;
 
 void main()
 {
