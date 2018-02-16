@@ -26,6 +26,7 @@ optional arguments:
 
 
 ## 2. References
+opengl error handling - https://www.khronos.org/opengl/wiki/OpenGL_Error#Testing_for_errors - 16.02.18 <br>
 modern opengl youtube tutorial - https://youtu.be/csKrVBWCItc - 15.02.18 <br> 
 loadShader files - https://badvertex.com/2012/11/20/how-to-load-a-glsl-shader-in-opengl-using-c.html  - 12.02.18  <br>
 glPoints - https://solarianprogrammer.com/2013/05/13/opengl-101-drawing-primitives/ - 12.02.18  <br>
