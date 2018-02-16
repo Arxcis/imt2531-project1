@@ -61,22 +61,16 @@ struct Pacman
     int                   lives = 3;
     int                   score = 0;
 
-    Pacman() = default;
-    Pacman& operator=(const Pacman& other) = default;
-
-    Pacman(Mesh::Mesh _mesh, const glm::vec2 _pos, std::vector<ost::Rect> _uv)
-    :mesh(_mesh)
-    ,pos(_pos)
-    ,uv(_uv)
-    {
-        Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0);
+    void bind() { 
+        Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0); 
     }
 
     void addScore(int points) {
         score += points;
     }
 
-    void damage() {
+    void damage() 
+    {
         if(invincibleTime > 0)
             return;
         lives--;
@@ -84,17 +78,19 @@ struct Pacman
         invincibleTime = 2.0; //MAGIC NUMBER
     }
 
-    void tickInvincibility(const double dt) {
+    void tickInvincibility(const double dt) 
+    {
         invincibleTime -= dt;
     }
 
-    void move(const float dt, const Grid& grid) {
+    void move(const float dt, const Grid& grid)
+    {
         if (Level::canWalkToward(grid, pos, size, direction))
             pos += glm::vec2{direction} * dt * speed;
     }
 
-    void towards(const glm::ivec2 _wantedDirection, const Grid& grid) {
-
+    void towards(const glm::ivec2 _wantedDirection, const Grid& grid) 
+    {
         if (_wantedDirection != direction) {
             if (Level::canChangeDirection(grid, pos, size, direction, _wantedDirection)){
                 direction = _wantedDirection;
@@ -135,13 +131,9 @@ struct Ghost
     double        nextUpdateTime = 0.0;
     bool        onAttackCooldown = false;
 
-    Ghost() = default;
-    Ghost& operator=(const Ghost& other) = default;
-    Ghost(Mesh::Mesh _mesh, glm::vec2 _pos, std::vector<ost::Rect> _uv)
-    :mesh(_mesh)
-    ,pos(_pos)
-    ,uv(_uv)
-    { Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0); }
+    void bind() {
+        Mesh::bindRect(mesh, pos, size, uv[animationFrame], 0);
+    }
 
     void move(const float dt, const Grid& grid)
     {
@@ -149,7 +141,8 @@ struct Ghost
             pos += glm::vec2{direction} * dt * speed;
     }
 
-    bool tryAttack(const Pacman& pacman) {
+    bool tryAttack(const Pacman& pacman) 
+    {
         if(Level::isInSameTile(pacman.pos, pacman.size, pos, size)) {
             if(!onAttackCooldown) {
                 onAttackCooldown = true;
@@ -190,14 +183,12 @@ struct Cheese
     bool            enabled = true;
     const glm::vec2 size{0.5f,0.5f};
 
-    Cheese(Mesh::Mesh _mesh, glm::vec2 _pos)
-    :mesh(_mesh)
-    ,pos(_pos)
-    {
-        Mesh::bindPoint(mesh, pos, vec4(1.0f));
+    void bind() {
+        Mesh::bindPoint(mesh, pos, vec4(1.0f));   
     }
 
-    bool tryGetEatenBy(const Pacman& pacman) {
+    bool tryGetEatenBy(const Pacman& pacman) 
+    {
         if(Level::isInSameTile(pos, size, pacman.pos, pacman.size)) {
             enabled = false;
             Mesh::updatePoint(mesh, 0.0f); //disable rendering
@@ -217,17 +208,8 @@ struct Text
     glm::vec4              color = {0,0,1,1};
     float                  margin = 0.1f;
 
-    Text() = default;
-    Text& operator=(const Text& other) = default;
-
-    Text(Mesh::Mesh _mesh, glm::vec2 _pos, glm::vec2 _size, std::vector<ost::Rect> _uv, std::string _text)
-    :mesh(_mesh)
-    ,pos(_pos)
-    ,size(_size)
-    ,uv(_uv)
-    ,text(_text)
-    {
-        Mesh::bindText(mesh, pos, size, uv, text, margin, color);
+    void bind() {
+        Mesh::bindText(mesh, pos, size, uv, text, margin, color);        
     }
 
     void print()
@@ -262,14 +244,15 @@ enum UIElement : int
     UI_MENU_ITEM_MAX    = 5,
 };
 
-struct UserInterface
+class UserInterface
 {
+public:
     std::vector<Text> UItext;
-    size_t menuIndex = UI_MENU_ITEM_RESUME;
 
     glm::vec4 unselectColor = {0,0,1,1};
     glm::vec4 selectColor   = {1,0,0,1};
 
+    size_t menuIndex = UI_MENU_ITEM_RESUME;
 
     UserInterface() = default;
     UserInterface& operator=(const UserInterface& other) = default;
@@ -278,8 +261,10 @@ struct UserInterface
     UserInterface(std::vector<Text> _uitext)
     :UItext(_uitext)
     {
-        // Set the correct positions of all the UIElements
         hideMenu();
+        for (auto& txt: UItext) {
+            txt.bind();            
+        }
     }
 
     void refreshText() {

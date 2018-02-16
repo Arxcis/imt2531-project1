@@ -106,15 +106,18 @@ int main() {
             pacmanStart,
             pacmanUV
         };
+        pacman.bind();
 
         for (size_t i = 0; i < ghostCount; ++i) {
 
             auto ghostMesh = newMesh(spriteShader, rectVertexCount, rectElementCount);
-            ghosts.push_back(ost::Ghost{
+            auto g = ost::Ghost{
                 ghostMesh,
                 ghostStarts[i],
                 ghostUV
-            });
+            };
+            g.bind();
+            ghosts.push_back(g);
         }
     }
 
@@ -132,10 +135,11 @@ int main() {
         cheeseShader = Shader::makeShader_VBO(cheeseShaderProgram, GL_STATIC_DRAW, GL_POINTS);
 
         for (const auto v : level.vertices) {
-            cheeses.push_back(ost::Cheese{
+            auto cheese = ost::Cheese{
                 newMesh(cheeseShader, cheeseVertexCount),
                 v + cheeseOffset
-            });
+            };
+            cheese.bind();
         }
     }
 

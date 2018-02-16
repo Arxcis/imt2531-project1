@@ -37,8 +37,9 @@ namespace ost
     using PortalPair = std::pair<Portal, Portal>;
 
     using namespace glm;
-    struct Level {
-
+    class Level {
+    
+    public:    
         const std::vector<std::vector<TileType>> grid;
         const std::vector<vec2> vertices;
         const glm::ivec2 size;

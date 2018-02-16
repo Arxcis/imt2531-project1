@@ -27,8 +27,9 @@ struct Vertex
 static size_t VBO_MAX_SIZE = 2048;
 static size_t EBO_MAX_SIZE = 4096;
 
-struct Shader
+class Shader
 {
+public:
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
